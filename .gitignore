@@ -31,4 +31,6 @@ codegen/
 
 # Cloud based storage dotfile
 .MATLABDriveTag
-/Results_LidDrivenCavity_Euler
+
+# Results folder
+Results_*/
