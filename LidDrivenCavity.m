@@ -111,7 +111,7 @@ legend('show', 'Location', 'southwest');
 tic
 
 %% Time marching
-while ~steadyReached && n < maxSteps
+%while ~steadyReached && n < maxSteps
 
     % Print current time, iteration, and residual
     currentTime = n * dt; % if inside the outer time loop
@@ -122,7 +122,7 @@ while ~steadyReached && n < maxSteps
     residual = 1;
     
     %% SIMPLE loop
-    while residual > maxResidual && iterations < maxIterations
+    %while residual > maxResidual && iterations < maxIterations
     
         iterations = iterations + 1;
     
@@ -397,7 +397,7 @@ while ~steadyReached && n < maxSteps
         v = v_new;
         p = p_new;
     
-    end
+    %end
 
     %% End of time step
     % Verify steady state
@@ -418,7 +418,7 @@ while ~steadyReached && n < maxSteps
     v_old = v;
     totalIterations = totalIterations + iterations;
 
-end
+%end
 
 elapsedTime = toc;  % Stop timer and get elapsed seconds
 fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
@@ -576,44 +576,47 @@ grid on;
 
 %% Save results
 % Create results folder
+[scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
+[~, branchName] = system('git rev-parse --abbrev-ref HEAD');
+branchName = strtrim(branchName); % Get branch name
 filePrefix = "Re" + ReString + "_";
+timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm")); % Get current time (e.g. 19Jan_02-38)
 
-[scriptDir, name, ~] = fileparts(mfilename('fullpath'));
-timeStamp = string(datetime("now","Format","yyyy_MM_dd_HH_mm_ss"));
-resultsFolder = fullfile(scriptDir, name, filePrefix + timeStamp);
-mkdir(resultsFolder);   % Create the folder
-disp(["Folder created: " resultsFolder]);
+resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
 
-% Performance Log
-logFile = fullfile(resultsFolder, filePrefix + "Performance_Log.txt");
-fileID = fopen(logFile, 'w');
-fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
-fprintf(fileID, '==========================\n');
-fprintf(fileID, 'File: %s\n', name);
-fprintf(fileID, 'Reynolds Number: %d\n', Re);
-fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
-fprintf(fileID, 'Time Step (dt): %.1e\n', dt);
-fprintf(fileID, 'Pressure Under-relaxation: %g\n', alpha_p);
-
-fprintf(fileID, 'Total Time Steps Completed: %d\n', n);
-fprintf(fileID, 'Total Time Completed: %.4f seconds\n', n * dt);
-fprintf(fileID, 'Total SIMPLE Iterations: %d\n', totalIterations);
-fprintf(fileID, 'Total Elapsed Time: %.2f seconds\n', elapsedTime);
-
-if n > 0
-    fprintf(fileID, 'Avg Iterations per Time Step: %.2f\n', totalIterations / n);
-    fprintf(fileID, 'Avg Time per Time Step: %.4f seconds\n', elapsedTime / n);
-end
-
-fclose(fileID);
-
-% Exporting results
-set(groot, 'defaultAxesToolbarVisible', 'off'); % Set the default figure property for the Axes Toolbar to 'never'
-writematrix(u_centerline, fullfile(resultsFolder, filePrefix + "u_Center_Line.csv"));
-writematrix(v_centerline, fullfile(resultsFolder, filePrefix + "v_Center_Line.csv"));
-exportgraphics(figure(1), fullfile(resultsFolder, filePrefix + "Velocity_Magnitude.png"), 'Resolution', 300);
-exportgraphics(figure(2), fullfile(resultsFolder, filePrefix + "u_Velocity.png"), 'Resolution', 300);
-exportgraphics(figure(3), fullfile(resultsFolder, filePrefix + "v_Velocity.png"), 'Resolution', 300);
-exportgraphics(figure(4), fullfile(resultsFolder, filePrefix + "Pressure.png"), 'Resolution', 300);
-exportgraphics(figure(5), fullfile(resultsFolder, filePrefix + "u_Centerline.png"), 'Resolution', 300);
-exportgraphics(figure(6), fullfile(resultsFolder, filePrefix + "v_Centerline.png"), 'Resolution', 300);
+% mkdir(resultsFolder);   % Create the folder
+% disp(["Folder created: " resultsFolder]);
+% 
+% % Performance Log
+% logFile = fullfile(resultsFolder, filePrefix + "Performance_Log.txt");
+% fileID = fopen(logFile, 'w');
+% fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
+% fprintf(fileID, '==========================\n');
+% fprintf(fileID, 'File: %s\n', name);
+% fprintf(fileID, 'Reynolds Number: %d\n', Re);
+% fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
+% fprintf(fileID, 'Time Step (dt): %.1e\n', dt);
+% fprintf(fileID, 'Pressure Under-relaxation: %g\n', alpha_p);
+% 
+% fprintf(fileID, 'Total Time Steps Completed: %d\n', n);
+% fprintf(fileID, 'Total Time Completed: %.4f seconds\n', n * dt);
+% fprintf(fileID, 'Total SIMPLE Iterations: %d\n', totalIterations);
+% fprintf(fileID, 'Total Elapsed Time: %.2f seconds\n', elapsedTime);
+% 
+% if n > 0
+%     fprintf(fileID, 'Avg Iterations per Time Step: %.2f\n', totalIterations / n);
+%     fprintf(fileID, 'Avg Time per Time Step: %.4f seconds\n', elapsedTime / n);
+% end
+% 
+% fclose(fileID);
+% 
+% % Exporting results
+% set(groot, 'defaultAxesToolbarVisible', 'off'); % Set the default figure property for the Axes Toolbar to 'never'
+% writematrix(u_centerline, fullfile(resultsFolder, filePrefix + "u_Center_Line.csv"));
+% writematrix(v_centerline, fullfile(resultsFolder, filePrefix + "v_Center_Line.csv"));
+% exportgraphics(figure(1), fullfile(resultsFolder, filePrefix + "Velocity_Magnitude.png"), 'Resolution', 300);
+% exportgraphics(figure(2), fullfile(resultsFolder, filePrefix + "u_Velocity.png"), 'Resolution', 300);
+% exportgraphics(figure(3), fullfile(resultsFolder, filePrefix + "v_Velocity.png"), 'Resolution', 300);
+% exportgraphics(figure(4), fullfile(resultsFolder, filePrefix + "Pressure.png"), 'Resolution', 300);
+% exportgraphics(figure(5), fullfile(resultsFolder, filePrefix + "u_Centerline.png"), 'Resolution', 300);
+% exportgraphics(figure(6), fullfile(resultsFolder, filePrefix + "v_Centerline.png"), 'Resolution', 300);
