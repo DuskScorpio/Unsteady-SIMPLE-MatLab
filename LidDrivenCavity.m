@@ -1,6 +1,6 @@
-clc
-clear all
+clearvars -except Re
 close all
+clc
 
 %% Initialization
 
@@ -18,7 +18,11 @@ maxSteps = round(timeEnd / dt); % Max number of time steps
 maxIterations = 200; % Max number of SIMPLE iterations
 maxResidual = 1e-8; % SIMPLE loop residual tolerance
 steadyTolerance = 1e-6; % steady state tolerance
-Re = 1000; % Reynold's number
+
+if ~exist('Re', 'var')
+    Re = 100; % Set Re if script ran by itself
+end
+
 U_lid = 1; % Lid velocity = 1m/s
 
 % Ensure uniform grid size
@@ -111,7 +115,7 @@ legend('show', 'Location', 'southwest');
 tic
 
 %% Time marching
-%while ~steadyReached && n < maxSteps
+while ~steadyReached && n < maxSteps
 
     % Print current time, iteration, and residual
     currentTime = n * dt; % if inside the outer time loop
@@ -122,7 +126,7 @@ tic
     residual = 1;
     
     %% SIMPLE loop
-    %while residual > maxResidual && iterations < maxIterations
+    while residual > maxResidual && iterations < maxIterations
     
         iterations = iterations + 1;
     
@@ -397,7 +401,7 @@ tic
         v = v_new;
         p = p_new;
     
-    %end
+    end
 
     %% End of time step
     % Verify steady state
@@ -418,7 +422,7 @@ tic
     v_old = v;
     totalIterations = totalIterations + iterations;
 
-%end
+end
 
 elapsedTime = toc;  % Stop timer and get elapsed seconds
 fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
@@ -597,7 +601,7 @@ logFile = fullfile(resultsFolder, filePrefix + "Performance_Log.txt");
 fileID = fopen(logFile, 'w');
 fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
 fprintf(fileID, '==========================\n');
-fprintf(fileID, "File: %s\n", fileName + "_" + branchName + " Node Average");
+fprintf(fileID, "File: %s\n", fileName + "_" + branchName);
 fprintf(fileID, 'Reynolds Number: %d\n', Re);
 fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
 fprintf(fileID, 'Time Step (dt): %.1e\n', dt);
