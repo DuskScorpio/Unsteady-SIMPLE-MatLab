@@ -533,7 +533,7 @@ grid on;
 
 figure(6);
 plot(x_center, v_centerline, 'b'); hold on;
-plot(ghia_x, ghia_v, 'o'); % Re=100
+plot(ghia_x, ghia_v, 'o');
 xlabel('x');
 ylabel('v');
 legend('SIMPLE','Ghia et al.');
