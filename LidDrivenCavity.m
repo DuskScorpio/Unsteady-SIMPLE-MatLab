@@ -1,6 +1,6 @@
-clc
-clear all
+clearvars -except Re
 close all
+clc
 
 %% Initialization
 
@@ -18,7 +18,11 @@ maxSteps = round(timeEnd / dt); % Max number of time steps
 maxIterations = 200; % Max number of SIMPLE iterations
 maxResidual = 1e-8; % SIMPLE loop residual tolerance
 steadyTolerance = 1e-6; % steady state tolerance
-Re = 1000; % Reynold's number
+
+if ~exist('Re', 'var')
+    Re = 100; % Set Re if script ran by itself
+end
+
 U_lid = 1; % Lid velocity = 1m/s
 
 % Ensure uniform grid size
@@ -576,11 +580,19 @@ grid on;
 
 %% Save results
 % Create results folder
-filePrefix = "Re" + ReString + "_";
+[scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
+[~, branchName] = system('git rev-parse --abbrev-ref HEAD');
+branchName = strtrim(branchName); % Get branch name
 
-[scriptDir, name, ~] = fileparts(mfilename('fullpath'));
-timeStamp = string(datetime("now","Format","yyyy_MM_dd_HH_mm_ss"));
-resultsFolder = fullfile(scriptDir, name, filePrefix + timeStamp);
+if strcmp(branchName, "master")
+    branchName = "Euler";
+end
+
+filePrefix = "Re" + ReString + "_";
+timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm")); % Get current time (e.g. 19Jan_02-38)
+
+resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
+
 mkdir(resultsFolder);   % Create the folder
 disp(["Folder created: " resultsFolder]);
 
@@ -589,7 +601,7 @@ logFile = fullfile(resultsFolder, filePrefix + "Performance_Log.txt");
 fileID = fopen(logFile, 'w');
 fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
 fprintf(fileID, '==========================\n');
-fprintf(fileID, 'File: %s\n', name);
+fprintf(fileID, "File: %s\n", fileName + "_" + branchName);
 fprintf(fileID, 'Reynolds Number: %d\n', Re);
 fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
 fprintf(fileID, 'Time Step (dt): %.1e\n', dt);
