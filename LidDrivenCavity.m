@@ -2,18 +2,25 @@ clearvars -except Re
 close all
 clc
 
-%% Initialization
+%% Setup
+% Primary Parameters
+length = 1; % Length along the positive x-directon of the flow domain 
+height = 1; % Length along the positive y-direction of the flow domain
+numCellsY = 51; % Number of cells along the y-direction
+CFL = 0.1; % Courant number
+U_lid = 1; % Lid velocity = 1m/s
+alpha_v = 1; % v-velocity relaxation factor
+alpha_u = 1; % u-velocity relaxation factor
+alpha_p = 0.3; % pressure relaxation factor
 
-% Parameters
-length = 1; % length along the positive x-directon of the flow domain 
-height = 1; % length along the positive y-direction of the flow domain
-numCellsY = 51; % number of cells along the y-direction
-dy = height / numCellsY; % cell size along the y-direction
-dx = dy; % cell size along the x-direction
-numCellsX = length / dx; % number of cells along the x-direction
+% Derived Parameters
+dy = height / numCellsY; % Cell size along the y-direction
+dx = dy; % Cell size along the x-direction
+numCellsX = length / dx; % Number of cells along the x-direction
+dt = CFL * (dx / U_lid); % Time step size
 
-dt = 1e-3; % Time step size
-timeEnd = 1000; % Termination time
+% Criteria
+timeEnd = 100; % Termination time
 maxSteps = round(timeEnd / dt); % Max number of time steps
 maxIterations = 200; % Max number of SIMPLE iterations
 maxResidual = 1e-8; % SIMPLE loop residual tolerance
@@ -23,8 +30,6 @@ if ~exist('Re', 'var')
     Re = 100; % Set Re if script ran by itself
 end
 
-U_lid = 1; % Lid velocity = 1m/s
-
 % Ensure uniform grid size
 if mod(numCellsX,1) ~= 0
     error('numCellsX is not an integer. Adjust numCellsY or dimensions.');
@@ -33,33 +38,24 @@ end
 % Fluid properties
 MU = 1e-3; % viscosity of the fluid
 RHO = (MU * Re) / (U_lid * length); % density of the fluid
-CFL = U_lid * dt / dx % Courant Number
-
-% Relaxation factors
-alpha_v = 1;
-alpha_u = 1;
-alpha_p = 0.3;
 
 %% Variables
 u_old = zeros(numCellsY + 2, numCellsX + 3); % u velocity from previous time step
 u_star = zeros(numCellsY + 2, numCellsX + 3); % u velocity prediction
 u_new = zeros(numCellsY + 2, numCellsX + 3); % corrected u velocity
-% u_final = zeros(numCellsY, numCellsX, nSteps); % final u velocity at each time step
 
 v_old = zeros(numCellsY + 3, numCellsX + 2); % v velocity from previous time step
 v_star = zeros(numCellsY + 3, numCellsX + 2); % v velocity prediction
 v_new = zeros(numCellsY + 3, numCellsX + 2); % corrected v velocity
-% v_final = zeros(numCellsY, numCellsX, nSteps); % final v velocity at each time step
 
 p_prime = zeros(numCellsY + 2, numCellsX + 2); % pressure correction
 p = zeros(numCellsY + 2, numCellsX + 2); % pressure
 p_new = zeros(numCellsY + 2, numCellsX + 2); % corrected pressure
-% p_final = zeros(numCellsY, numCellsX, nSteps); % final pressure at each time step
 
 b = zeros(numCellsY + 2, numCellsX + 2); % source term (for pressure correction)
 b_new = zeros(numCellsY + 2, numCellsX + 2); % source term (after correction)
 
-%% Initialize
+%% Initial Conditions
 u_old(1, 2:numCellsX + 2) = 2*U_lid; % u velocity at lid = 1m/s
 u = u_old; % u velocity from previous iteration
 v = v_old; % v velocity from previous iteration
@@ -111,7 +107,7 @@ ylabel('RMS Residual');
 title('Solver Convergence');
 legend('show', 'Location', 'southwest');
 
-% Start timer
+%% Start timer
 tic
 
 %% Time marching
@@ -604,9 +600,9 @@ fprintf(fileID, '==========================\n');
 fprintf(fileID, "File: %s\n", fileName + "_" + branchName);
 fprintf(fileID, 'Reynolds Number: %d\n', Re);
 fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
+fprintf(fileID, 'Courant Number: %g\n', CFL);
 fprintf(fileID, 'Time Step (dt): %.1e\n', dt);
 fprintf(fileID, 'Pressure Under-relaxation: %g\n', alpha_p);
-
 fprintf(fileID, 'Total Time Steps Completed: %d\n', n);
 fprintf(fileID, 'Total Time Completed: %.4f seconds\n', n * dt);
 fprintf(fileID, 'Total SIMPLE Iterations: %d\n', totalIterations);
