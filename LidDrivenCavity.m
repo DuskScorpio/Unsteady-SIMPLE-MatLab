@@ -2,6 +2,8 @@ clearvars -except Re
 close all
 clc
 
+testrevert
+
 %% Setup
 % Primary Parameters
 length = 1; % Length along the positive x-directon of the flow domain 
