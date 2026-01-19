@@ -34,3 +34,10 @@ codegen/
 
 # Results folder
 Results_*/
+/Euler_LidDrivenCavity_v2
+/EulerBackwards_LidDrivenCavity
+/Lax_LidDrivenCavity
+EulerBackwards_LidDrivenCavity.m
+Lax_LidDrivenCavity.m
+Lax_LidDrivenCavity_v2.m
+TingWei_explicitSIMPLE_rev1.m
