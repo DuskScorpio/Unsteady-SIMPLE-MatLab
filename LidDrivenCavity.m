@@ -12,7 +12,7 @@ dy = height / numCellsY; % cell size along the y-direction
 dx = dy; % cell size along the x-direction
 numCellsX = length / dx; % number of cells along the x-direction
 
-dt = 1e-3; % Time step size
+dt = 1e-4; % Time step size
 timeEnd = 1000; % Termination time
 maxSteps = round(timeEnd / dt); % Max number of time steps
 maxIterations = 200; % Max number of SIMPLE iterations
