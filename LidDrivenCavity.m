@@ -125,6 +125,7 @@ hPDiff = animatedline('Color', 'magenta', 'LineWidth', 1.5, 'LineStyle', '--', '
 set(gca, 'YScale', 'log');
 set(gca, 'YScale', 'log');
 grid on;
+axis square;
 xlabel('Total SIMPLE Iterations');
 ylabel('RMS Residual');
 title('Solver Convergence');
@@ -476,7 +477,7 @@ colormap(jet(21));
 hold on;
 h = streamslice(xm, ym, u_center, v_center, 2, 'cubic');
 set(h,'Color','w');  % make streamlines white
-axis equal;
+axis square;
 axis([0 1 0 1]);
 xlabel('x'); ylabel('y');
 title('Streamlines + Velocity Magnitude');
@@ -487,6 +488,7 @@ figure(2);
 contourf(x, y, u_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
+axis square;
 xlabel('x'); ylabel('y');
 title('u velocity Contour');
 
@@ -495,6 +497,7 @@ figure(3);
 contourf(x, y, v_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
+axis square;
 xlabel('x'); ylabel('y');
 title('v velocity Contour');
 
@@ -503,6 +506,7 @@ figure(4);
 contourf(x, y, p_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
+axis square;
 xlabel('x'); ylabel('y');
 title('Pressure Contour');
 
@@ -536,7 +540,7 @@ ghia_v = v_table.(ReString);
 figure(5);
 plot(u_centerline, y_center, 'b'); hold on;
 plot(ghia_u, ghia_y, 'o'); % Re=100
-axis equal;
+axis square;
 xlabel('u');
 ylabel('y');
 legend('SIMPLE', 'Ghia et al.');
@@ -546,6 +550,7 @@ grid on;
 figure(6);
 plot(x_center, v_centerline, 'b'); hold on;
 plot(ghia_x, ghia_v, 'o');
+axis square;
 xlabel('x');
 ylabel('v');
 legend('SIMPLE','Ghia et al.');
