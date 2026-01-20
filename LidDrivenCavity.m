@@ -410,7 +410,8 @@ while ~steadyReached && n < maxSteps
         addpoints(hResidual, totalIterations + iterations, residual);
         
         % Update the plot every 5 iterations to keep the solver fast
-        if mod(totalIterations + iterations, 50) == 0
+        if mod(totalIterations + iterations, 100) == 0
+            xlim([max(1, totalIterations + iterations - 500), totalIterations + iterations + 50]); % Show latest 500 iterations
             drawnow limitrate
         end
     
