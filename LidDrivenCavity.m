@@ -36,24 +36,25 @@ if mod(numCellsX,1) ~= 0
 end
 
 % Fluid properties
-MU = 1e-3; % viscosity of the fluid
-RHO = (MU * Re) / (U_lid * length); % density of the fluid
+MU = 1e-3; % Viscosity of the fluid
+RHO = (MU * Re) / (U_lid * length); % Density of the fluid
 
 %% Variables
 u_old = zeros(numCellsY + 2, numCellsX + 3); % u velocity from previous time step
 u_star = zeros(numCellsY + 2, numCellsX + 3); % u velocity prediction
-u_new = zeros(numCellsY + 2, numCellsX + 3); % corrected u velocity
+u_new = zeros(numCellsY + 2, numCellsX + 3); % Corrected u velocity
 
 v_old = zeros(numCellsY + 3, numCellsX + 2); % v velocity from previous time step
 v_star = zeros(numCellsY + 3, numCellsX + 2); % v velocity prediction
-v_new = zeros(numCellsY + 3, numCellsX + 2); % corrected v velocity
+v_new = zeros(numCellsY + 3, numCellsX + 2); % Corrected v velocity
 
-p_prime = zeros(numCellsY + 2, numCellsX + 2); % pressure correction
-p = zeros(numCellsY + 2, numCellsX + 2); % pressure
-p_new = zeros(numCellsY + 2, numCellsX + 2); % corrected pressure
+p_prime = zeros(numCellsY + 2, numCellsX + 2); % Pressure correction
+p_old = zeros(numCellsY + 2, numCellsX + 2); % Pressure from previous time step
+p = zeros(numCellsY + 2, numCellsX + 2); % Pressure
+p_new = zeros(numCellsY + 2, numCellsX + 2); % Corrected pressure
 
-b = zeros(numCellsY + 2, numCellsX + 2); % source term (for pressure correction)
-b_new = zeros(numCellsY + 2, numCellsX + 2); % source term (after correction)
+b = zeros(numCellsY + 2, numCellsX + 2); % Source term (for pressure correction)
+b_new = zeros(numCellsY + 2, numCellsX + 2); % Source term (after correction)
 
 %% Initial Conditions
 u_old(1, 2:numCellsX + 2) = 2*U_lid; % u velocity at lid = 1m/s
@@ -72,20 +73,41 @@ Nx = numCellsX;
 Ny = numCellsY;
 N  = Nx * Ny;
 
-a_EW = dt / (RHO * dy * dy);
-a_NS = dt / (RHO * dx * dx);
+a_EW = dt / (RHO * dx * dx);
+a_NS = dt / (RHO * dy * dy);
 a_P  = 2*a_EW + 2*a_NS;
 
 A = sparse(N, N);
 
-for ii = 1:Ny
-    for jj = 1:Nx
-        k = (ii-1)*Nx + jj;
-        A(k,k) = a_P;
-        if jj > 1,  A(k, k-1) = -a_EW; end
-        if jj < Nx, A(k, k+1) = -a_EW; end
-        if ii < Ny, A(k, k+Nx) = -a_NS; end
-        if ii > 1,  A(k, k-Nx) = -a_NS; end
+for i = 1:Ny
+    for j = 1:Nx
+        k = (i - 1) * Nx + j; % Row major index
+
+        A(k,k) = a_P; % Center
+
+        if j > 1
+            A(k, k-1) = -a_EW; % West neighbour
+        else
+            A(k,k) = A(k,k) - a_EW; % West boundary
+        end
+
+        if j < Nx
+            A(k, k+1) = -a_EW; % East neighbour
+        else
+            A(k,k) = A(k,k) - a_EW; % East boundary
+        end
+
+        if i < Ny
+            A(k, k+Nx) = -a_NS; % South neighbour
+        else
+            A(k,k) = A(k,k) - a_NS; % South boundary
+        end
+
+        if i > 1
+            A(k, k-Nx) = -a_NS; % North neighbour
+        else
+            A(k,k) = A(k,k) - a_NS; % North boundary
+        end
     end
 end
 
@@ -98,10 +120,12 @@ set(0,'DefaultFigureWindowStyle','docked')
 figure;
 hResidual = animatedline('Color', 'red', 'LineWidth', 1.5, 'DisplayName', 'Mass Residual (Inner Loop)');
 hUDiff = animatedline('Color', 'green', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
-hVDiff = animatedline('Color', 'blue', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
+hVDiff = animatedline('Color', 'blue', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'v Diff (Outer Loop)');
+hPDiff = animatedline('Color', 'magenta', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'p Diff (Outer Loop)');
 set(gca, 'YScale', 'log');
-set(gca, 'YScale', 'log'); % CFD residuals must be on a log scale
+set(gca, 'YScale', 'log');
 grid on;
+axis square;
 xlabel('Total SIMPLE Iterations');
 ylabel('RMS Residual');
 title('Solver Convergence');
@@ -276,18 +300,17 @@ while ~steadyReached && n < maxSteps
         %% Pressure correction - Interior
         for i = 2:numCellsY + 1
             for j = 2:numCellsX + 1
-                b(i, j) = (u_star(i, j) - u_star(i, j + 1)) / dx + ...
-                         (v_star(i + 1, j) - v_star(i, j)) / dy;
+                b(i, j) = (u_star(i, j) - u_star(i, j + 1)) / dx + (v_star(i + 1, j) - v_star(i, j)) / dy;
             end
         end
 
         % Build RHS
         b_vec = zeros(N,1);
 
-        for ii = 1:Ny
-            for jj = 1:Nx
-                k = (ii-1)*Nx + jj;
-                b_vec(k) = b(ii+1, jj+1);
+        for i = 1:Ny
+            for j = 1:Nx
+                k = (i - 1) * Nx + j;
+                b_vec(k) = b(i + 1, j + 1);
             end
         end
 
@@ -299,11 +322,10 @@ while ~steadyReached && n < maxSteps
 
         % Map back to staggered grid p_prime(i,j)
         p_prime(:) = 0;   % reset
-
-        for ii = 1:Ny
-            for jj = 1:Nx
-                k = (ii-1)*Nx + jj;
-                p_prime(ii+1, jj+1) = p_vec(k);
+        for i = 1:Ny
+            for j = 1:Nx
+                k = (i - 1) * Nx + j;
+                p_prime(i + 1, j + 1) = p_vec(k);
             end
         end
     
@@ -415,10 +437,12 @@ while ~steadyReached && n < maxSteps
     % Verify steady state
     u_diff = sqrt(mean((u - u_old).^2, 'all'));
     v_diff = sqrt(mean((v - v_old).^2, 'all'));
+    p_diff = sqrt(mean((p - p_old).^2, 'all'));
     maxDiff = max(u_diff, v_diff);
 
     addpoints(hUDiff, totalIterations, u_diff);
     addpoints(hVDiff, totalIterations, v_diff);
+    addpoints(hPDiff, totalIterations, p_diff);
     drawnow limitrate
 
     if maxDiff < steadyTolerance
@@ -428,6 +452,7 @@ while ~steadyReached && n < maxSteps
 
     u_old = u;
     v_old = v;
+    p_old = p;
     totalIterations = totalIterations + iterations;
 
 end
@@ -464,7 +489,7 @@ colormap(jet(21));
 hold on;
 h = streamslice(xm, ym, u_center, v_center, 2, 'cubic');
 set(h,'Color','w');  % make streamlines white
-axis equal;
+axis square;
 axis([0 1 0 1]);
 xlabel('x'); ylabel('y');
 title('Streamlines + Velocity Magnitude');
@@ -475,6 +500,7 @@ figure(2);
 contourf(x, y, u_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
+axis square;
 xlabel('x'); ylabel('y');
 title('u velocity Contour');
 
@@ -483,6 +509,7 @@ figure(3);
 contourf(x, y, v_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
+axis square;
 xlabel('x'); ylabel('y');
 title('v velocity Contour');
 
@@ -491,6 +518,7 @@ figure(4);
 contourf(x, y, p_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
+axis square;
 xlabel('x'); ylabel('y');
 title('Pressure Contour');
 
@@ -524,7 +552,7 @@ ghia_v = v_table.(ReString);
 figure(5);
 plot(u_centerline, y_center, 'b'); hold on;
 plot(ghia_u, ghia_y, 'o'); % Re=100
-axis equal;
+axis square;
 xlabel('u');
 ylabel('y');
 legend('SIMPLE', 'Ghia et al.');
@@ -534,6 +562,7 @@ grid on;
 figure(6);
 plot(x_center, v_centerline, 'b'); hold on;
 plot(ghia_x, ghia_v, 'o');
+axis square;
 xlabel('x');
 ylabel('v');
 legend('SIMPLE','Ghia et al.');
