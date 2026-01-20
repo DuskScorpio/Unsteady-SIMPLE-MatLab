@@ -49,6 +49,7 @@ v_star = zeros(numCellsY + 3, numCellsX + 2); % v velocity prediction
 v_new = zeros(numCellsY + 3, numCellsX + 2); % Corrected v velocity
 
 p_prime = zeros(numCellsY + 2, numCellsX + 2); % Pressure correction
+p_old = zeros(numCellsY + 2, numCellsX + 2); % Pressure from previous time step
 p = zeros(numCellsY + 2, numCellsX + 2); % Pressure
 p_new = zeros(numCellsY + 2, numCellsX + 2); % Corrected pressure
 
@@ -119,7 +120,8 @@ set(0,'DefaultFigureWindowStyle','docked')
 figure;
 hResidual = animatedline('Color', 'red', 'LineWidth', 1.5, 'DisplayName', 'Mass Residual (Inner Loop)');
 hUDiff = animatedline('Color', 'green', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
-hVDiff = animatedline('Color', 'blue', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
+hVDiff = animatedline('Color', 'blue', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'v Diff (Outer Loop)');
+hPDiff = animatedline('Color', 'magenta', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'p Diff (Outer Loop)');
 set(gca, 'YScale', 'log');
 set(gca, 'YScale', 'log');
 grid on;
@@ -422,10 +424,12 @@ while ~steadyReached && n < maxSteps
     % Verify steady state
     u_diff = sqrt(mean((u - u_old).^2, 'all'));
     v_diff = sqrt(mean((v - v_old).^2, 'all'));
+    p_diff = sqrt(mean((p - p_old).^2, 'all'));
     maxDiff = max(u_diff, v_diff);
 
     addpoints(hUDiff, totalIterations, u_diff);
     addpoints(hVDiff, totalIterations, v_diff);
+    addpoints(hPDiff, totalIterations, p_diff);
     drawnow limitrate
 
     if maxDiff < steadyTolerance
@@ -435,6 +439,7 @@ while ~steadyReached && n < maxSteps
 
     u_old = u;
     v_old = v;
+    p_old = p;
     totalIterations = totalIterations + iterations;
 
 end
