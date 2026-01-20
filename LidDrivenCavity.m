@@ -175,32 +175,26 @@ while ~steadyReached && n < maxSteps
                 % Second-order upwind for u_e
                 if u_e_interp < 0
                     u_e = 1.5*u_E - 0.5*u_EE;
-                    u_e_transient = u_E;
                 elseif u_e_interp > 0
                     u_e = 1.5*u_P - 0.5*u_W;
-                    u_e_transient = u_P;
                 else
                     u_e = 0;
-                    u_e_transient = 0;
                 end
     
                 % Second-order upwind for u_w
                 if u_w_interp < 0
                     u_w = 1.5*u_P - 0.5*u_E;
-                    u_w_transient = u_P;
                 elseif u_w_interp > 0
                     u_w = 1.5*u_W - 0.5*u_WW;
-                    u_w_transient = u_W;
                 else
                     u_w = 0;
-                    u_w_transient = 0;
                 end
     
                 convectionTerm = (u_w_interp * u_w - u_e_interp * u_e) / dx + (v_s_interp * u_s_interp - v_n_interp * u_n_interp) / dy; % LUDS
                 diffusionTerm = (MU / RHO) * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
                 pressureTerm = (p_w - p_e) / (RHO * dx);
     
-                u_star(i, j) = 0.25*(u_e_transient + u_w_transient + u_n_interp + u_s_interp) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                u_star(i, j) = 0.25*(u_e + u_w + u_n_interp + u_s_interp) + dt * (convectionTerm + diffusionTerm + pressureTerm);
                 
             end
         end
@@ -249,31 +243,25 @@ while ~steadyReached && n < maxSteps
                 % Second-order upwind for v_n
                 if v_n_interp < 0
                     v_n = 1.5*v_N - 0.5*v_NN;
-                    v_n_transient = v_N;
                 elseif v_n_interp > 0
                     v_n = 1.5*v_P - 0.5*v_S;
-                    v_n_transient = v_P;
                 else
                     v_n = 0;
-                    v_n_transient = 0;
                 end
     
                 % Second-order upwind for v_s
                 if v_s_interp < 0
                     v_s = 1.5*v_P - 0.5*v_N;
-                    v_s_transient = v_P;
                 elseif v_s_interp > 0
                     v_s = 1.5*v_S - 0.5*v_SS;
-                    v_s_transient = v_S;
                 else
                     v_s = 0;
-                    v_s_transient = 0;
                 end
     
                 convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s - v_n_interp * v_n) / dy; % LUDS
                 diffusionTerm = (MU / RHO) * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
                 pressureTerm = (p_s - p_n) / (RHO * dy);
-                v_star(i, j) = 0.25*(v_e_interp + v_w_interp + v_n_transient + v_s_transient) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                v_star(i, j) = 0.25*(v_e_interp + v_w_interp + v_n + v_s) + dt * (convectionTerm + diffusionTerm + pressureTerm);
     
             end
         end
