@@ -590,6 +590,7 @@ fprintf(fileID, 'Total Time Steps Completed: %d\n', n);
 fprintf(fileID, 'Total Time Completed: %.4f seconds\n', n * dt);
 fprintf(fileID, 'Total SIMPLE Iterations: %d\n', totalIterations);
 fprintf(fileID, 'Total Elapsed Time: %.2f seconds\n', elapsedTime);
+fprintf(fileID, 'Final Steady State Tolerance %g\n', maxDiff);
 
 if n > 0
     fprintf(fileID, 'Avg Iterations per Time Step: %.2f\n', totalIterations / n);
