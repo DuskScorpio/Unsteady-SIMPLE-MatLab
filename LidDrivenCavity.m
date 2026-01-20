@@ -36,24 +36,24 @@ if mod(numCellsX,1) ~= 0
 end
 
 % Fluid properties
-MU = 1e-3; % viscosity of the fluid
-RHO = (MU * Re) / (U_lid * length); % density of the fluid
+MU = 1e-3; % Viscosity of the fluid
+RHO = (MU * Re) / (U_lid * length); % Density of the fluid
 
 %% Variables
 u_old = zeros(numCellsY + 2, numCellsX + 3); % u velocity from previous time step
 u_star = zeros(numCellsY + 2, numCellsX + 3); % u velocity prediction
-u_new = zeros(numCellsY + 2, numCellsX + 3); % corrected u velocity
+u_new = zeros(numCellsY + 2, numCellsX + 3); % Corrected u velocity
 
 v_old = zeros(numCellsY + 3, numCellsX + 2); % v velocity from previous time step
 v_star = zeros(numCellsY + 3, numCellsX + 2); % v velocity prediction
-v_new = zeros(numCellsY + 3, numCellsX + 2); % corrected v velocity
+v_new = zeros(numCellsY + 3, numCellsX + 2); % Corrected v velocity
 
-p_prime = zeros(numCellsY + 2, numCellsX + 2); % pressure correction
-p = zeros(numCellsY + 2, numCellsX + 2); % pressure
-p_new = zeros(numCellsY + 2, numCellsX + 2); % corrected pressure
+p_prime = zeros(numCellsY + 2, numCellsX + 2); % Pressure correction
+p = zeros(numCellsY + 2, numCellsX + 2); % Pressure
+p_new = zeros(numCellsY + 2, numCellsX + 2); % Corrected pressure
 
-b = zeros(numCellsY + 2, numCellsX + 2); % source term (for pressure correction)
-b_new = zeros(numCellsY + 2, numCellsX + 2); % source term (after correction)
+b = zeros(numCellsY + 2, numCellsX + 2); % Source term (for pressure correction)
+b_new = zeros(numCellsY + 2, numCellsX + 2); % Source term (after correction)
 
 %% Initial Conditions
 u_old(1, 2:numCellsX + 2) = 2*U_lid; % u velocity at lid = 1m/s
@@ -72,20 +72,41 @@ Nx = numCellsX;
 Ny = numCellsY;
 N  = Nx * Ny;
 
-a_EW = dt / (RHO * dy * dy);
-a_NS = dt / (RHO * dx * dx);
+a_EW = dt / (RHO * dx * dx);
+a_NS = dt / (RHO * dy * dy);
 a_P  = 2*a_EW + 2*a_NS;
 
 A = sparse(N, N);
 
-for ii = 1:Ny
-    for jj = 1:Nx
-        k = (ii-1)*Nx + jj;
-        A(k,k) = a_P;
-        if jj > 1,  A(k, k-1) = -a_EW; end
-        if jj < Nx, A(k, k+1) = -a_EW; end
-        if ii < Ny, A(k, k+Nx) = -a_NS; end
-        if ii > 1,  A(k, k-Nx) = -a_NS; end
+for i = 1:Ny
+    for j = 1:Nx
+        k = (i - 1) * Nx + j; % Row major index
+
+        A(k,k) = a_P; % Center
+
+        if j > 1
+            A(k, k-1) = -a_EW; % West neighbour
+        else
+            A(k,k) = A(k,k) - a_EW; % West boundary
+        end
+
+        if j < Nx
+            A(k, k+1) = -a_EW; % East neighbour
+        else
+            A(k,k) = A(k,k) - a_EW; % East boundary
+        end
+
+        if i < Ny
+            A(k, k+Nx) = -a_NS; % South neighbour
+        else
+            A(k,k) = A(k,k) - a_NS; % South boundary
+        end
+
+        if i > 1
+            A(k, k-Nx) = -a_NS; % North neighbour
+        else
+            A(k,k) = A(k,k) - a_NS; % North boundary
+        end
     end
 end
 
@@ -100,7 +121,7 @@ hResidual = animatedline('Color', 'red', 'LineWidth', 1.5, 'DisplayName', 'Mass 
 hUDiff = animatedline('Color', 'green', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
 hVDiff = animatedline('Color', 'blue', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
 set(gca, 'YScale', 'log');
-set(gca, 'YScale', 'log'); % CFD residuals must be on a log scale
+set(gca, 'YScale', 'log');
 grid on;
 xlabel('Total SIMPLE Iterations');
 ylabel('RMS Residual');
@@ -264,18 +285,17 @@ while ~steadyReached && n < maxSteps
         %% Pressure correction - Interior
         for i = 2:numCellsY + 1
             for j = 2:numCellsX + 1
-                b(i, j) = (u_star(i, j) - u_star(i, j + 1)) / dx + ...
-                         (v_star(i + 1, j) - v_star(i, j)) / dy;
+                b(i, j) = (u_star(i, j) - u_star(i, j + 1)) / dx + (v_star(i + 1, j) - v_star(i, j)) / dy;
             end
         end
 
         % Build RHS
         b_vec = zeros(N,1);
 
-        for ii = 1:Ny
-            for jj = 1:Nx
-                k = (ii-1)*Nx + jj;
-                b_vec(k) = b(ii+1, jj+1);
+        for i = 1:Ny
+            for j = 1:Nx
+                k = (i - 1) * Nx + j;
+                b_vec(k) = b(i + 1, j + 1);
             end
         end
 
@@ -287,11 +307,10 @@ while ~steadyReached && n < maxSteps
 
         % Map back to staggered grid p_prime(i,j)
         p_prime(:) = 0;   % reset
-
-        for ii = 1:Ny
-            for jj = 1:Nx
-                k = (ii-1)*Nx + jj;
-                p_prime(ii+1, jj+1) = p_vec(k);
+        for i = 1:Ny
+            for j = 1:Nx
+                k = (i - 1) * Nx + j;
+                p_prime(i + 1, j + 1) = p_vec(k);
             end
         end
     
