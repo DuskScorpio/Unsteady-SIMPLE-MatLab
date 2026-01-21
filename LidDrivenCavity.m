@@ -7,7 +7,7 @@ clc
 length = 1; % Length along the positive x-directon of the flow domain 
 height = 1; % Length along the positive y-direction of the flow domain
 numCellsY = 51; % Number of cells along the y-direction
-CFL = 0.5; % Courant number
+CFL = 0.1; % Courant number
 U_lid = 1; % Lid velocity = 1m/s
 alpha_v = 1; % v-velocity relaxation factor
 alpha_u = 1; % u-velocity relaxation factor
