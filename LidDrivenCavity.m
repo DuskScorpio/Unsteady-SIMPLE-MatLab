@@ -20,7 +20,7 @@ numCellsX = length / dx; % Number of cells along the x-direction
 dt = CFL * (dx / U_lid); % Time step size
 
 % Criteria
-timeEnd = 100; % Termination time
+timeEnd = 10; % Termination time
 maxSteps = round(timeEnd / dt); % Max number of time steps
 maxIterations = 200; % Max number of SIMPLE iterations
 maxResidual = 1e-8; % SIMPLE loop residual tolerance
