@@ -7,12 +7,12 @@ clc
 length = 1; % Length along the positive x-directon of the flow domain 
 height = 1; % Length along the positive y-direction of the flow domain
 numCellsY = 51; % Number of cells along the y-direction
-CFL = 0.1; % Courant number
+CFL = 0.4; % Courant number
 U_lid = 1; % Lid velocity = 1m/s
 alpha_v = 1; % v-velocity relaxation factor
 alpha_u = 1; % u-velocity relaxation factor
 alpha_p = 0.3; % pressure relaxation factor
-lax_factor = 0.01; % blending factor of lax method
+lax_factor = 0.5; % blending factor of lax method
 
 % Derived Parameters
 dy = height / numCellsY; % Cell size along the y-direction
@@ -25,7 +25,7 @@ timeEnd = 10; % Termination time
 maxSteps = round(timeEnd / dt); % Max number of time steps
 maxIterations = 200; % Max number of SIMPLE iterations
 maxResidual = 1e-8; % SIMPLE loop residual tolerance
-steadyTolerance = 1e-6; % steady state tolerance
+steadyTolerance = 1e-8; % steady state tolerance
 
 if ~exist('Re', 'var')
     Re = 100; % Set Re if script ran by itself
@@ -599,6 +599,7 @@ fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
 fprintf(fileID, 'Courant Number: %g\n', CFL);
 fprintf(fileID, 'Time Step (dt): %.1e\n', dt);
 fprintf(fileID, 'Pressure Under-relaxation: %g\n', alpha_p);
+fprintf(fileID, 'Lax Blending Factor: %g\n', lax_factor);
 fprintf(fileID, 'Total Time Steps Completed: %d\n', n);
 fprintf(fileID, 'Total Time Completed: %.4f seconds\n', n * dt);
 fprintf(fileID, 'Total SIMPLE Iterations: %d\n', totalIterations);
