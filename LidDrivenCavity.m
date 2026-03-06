@@ -471,7 +471,8 @@ p_center = p_new(iC, jC);
 % Velocity magnitude
 U_center_mag = sqrt(u_center.^2 + v_center.^2);
 
-figure(1);
+figure_1 = figure(1);
+figure_1.Theme = "light";
 contourf(x, y, U_center_mag, 20, 'LineColor', 'none'); % 20 contour levels
 colorbar;
 colormap(jet(21));
@@ -485,7 +486,7 @@ title('Streamlines + Velocity Magnitude');
 grid on;
 
 % u velocity
-figure(2);
+figure("Theme", "light");
 contourf(x, y, u_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
@@ -494,7 +495,7 @@ xlabel('x'); ylabel('y');
 title('u velocity Contour');
 
 % v velocity
-figure(3);
+figure("Theme", "light");
 contourf(x, y, v_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
@@ -503,7 +504,7 @@ xlabel('x'); ylabel('y');
 title('v velocity Contour');
 
 % pressure
-figure(4);
+figure("Theme", "light");
 contourf(x, y, p_center, 21, 'LineColor', 'none');
 colorbar;
 colormap(jet(21));
@@ -538,7 +539,7 @@ ghia_x = v_table.x;
 ghia_u = u_table.(ReString);
 ghia_v = v_table.(ReString);
 
-figure(5);
+figure("Theme", "light");
 plot(u_centerline, y_center, 'b'); hold on;
 plot(ghia_u, ghia_y, 'o'); % Re=100
 axis square;
@@ -548,7 +549,7 @@ legend('SIMPLE', 'Ghia et al.');
 title(['Vertical Centerline u Velocity Re = ', ReString]);
 grid on;
 
-figure(6);
+figure("Theme", "light");
 plot(x_center, v_centerline, 'b'); hold on;
 plot(ghia_x, ghia_v, 'o');
 axis square;
@@ -599,8 +600,10 @@ end
 
 fclose(fileID);
 
-% Exporting results
-set(groot, 'defaultAxesToolbarVisible', 'off'); % Set the default figure property for the Axes Toolbar to 'never'
+%% Exporting graphics
+% Set the default figure property for the Axes Toolbar to 'never'
+set(groot, 'defaultAxesToolbarVisible', 'off');
+% Export
 writematrix(u_centerline, fullfile(resultsFolder, filePrefix + "u_Center_Line.csv"));
 writematrix(v_centerline, fullfile(resultsFolder, filePrefix + "v_Center_Line.csv"));
 exportgraphics(figure(1), fullfile(resultsFolder, filePrefix + "Velocity_Magnitude.png"), 'Resolution', 300);
