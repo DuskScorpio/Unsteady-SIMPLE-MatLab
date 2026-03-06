@@ -197,7 +197,7 @@ while ~steadyReached && n < maxSteps
                     u_w_FOU = 0;
                 end
     
-                convectionTerm = (u_w_interp * u_w_interp - u_e_interp * u_e_interp) / dx + (v_s_interp * u_s_interp - v_n_interp * u_n_interp) / dy; % CDS
+                convectionTerm = (u_w_interp * u_w - u_e_interp * u_e) / dx + (v_s_interp * u_s_interp - v_n_interp * u_n_interp) / dy; % luds
                 diffusionTerm = (MU / RHO) * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
                 pressureTerm = (p_w - p_e) / (RHO * dx);
     
@@ -271,7 +271,7 @@ while ~steadyReached && n < maxSteps
                     v_s_FOU = 0;
                 end
     
-                convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s_interp - v_n_interp * v_n_interp) / dy; % CDS
+                convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s - v_n_interp * v_n) / dy; % luds
                 diffusionTerm = (MU / RHO) * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
                 pressureTerm = (p_s - p_n) / (RHO * dy);
                 v_star(i, j) = lax_factor * 0.25 * (v_e_interp + v_w_interp + v_n_interp + v_s_interp) + (1 - lax_factor) * v_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm); % Lax Euler hybrid
@@ -593,7 +593,7 @@ logFile = fullfile(resultsFolder, filePrefix + "Performance_Log.txt");
 fileID = fopen(logFile, 'w');
 fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
 fprintf(fileID, '==========================\n');
-fprintf(fileID, "File: %s\n", fileName + "_" + branchName, "FOU transient and CDS convection");
+fprintf(fileID, "File: %s\n", fileName + "_" + branchName, "Lax Euler hybrid transient and LUDS convection");
 fprintf(fileID, 'Reynolds Number: %d\n', Re);
 fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
 fprintf(fileID, 'Courant Number: %g\n', CFL);
