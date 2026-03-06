@@ -12,6 +12,7 @@ U_lid = 1; % Lid velocity = 1m/s
 alpha_v = 1; % v-velocity relaxation factor
 alpha_u = 1; % u-velocity relaxation factor
 alpha_p = 0.3; % pressure relaxation factor
+lax_factor = 0.01; % blending factor of lax method
 
 % Derived Parameters
 dy = height / numCellsY; % Cell size along the y-direction
@@ -200,7 +201,7 @@ while ~steadyReached && n < maxSteps
                 diffusionTerm = (MU / RHO) * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
                 pressureTerm = (p_w - p_e) / (RHO * dx);
     
-                u_star(i, j) = 0.25*(u_e_FOU + u_w_FOU + u_n_interp + u_s_interp) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                u_star(i, j) = lax_factor * 0.25 * (u_e_interp + u_w_interp + u_n_interp + u_s_interp) + (1 - lax_factor) * u_old + dt * (convectionTerm + diffusionTerm + pressureTerm); % Lax Euler hybrid
                 
             end
         end
@@ -273,7 +274,7 @@ while ~steadyReached && n < maxSteps
                 convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s_interp - v_n_interp * v_n_interp) / dy; % CDS
                 diffusionTerm = (MU / RHO) * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
                 pressureTerm = (p_s - p_n) / (RHO * dy);
-                v_star(i, j) = 0.25*(v_e_interp + v_w_interp + v_n_FOU + v_s_FOU) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                v_star(i, j) = lax_factor * 0.25 * (v_e_interp + v_w_interp + v_n_interp + v_s_interp) + (1 - lax_factor) * v_old + dt * (convectionTerm + diffusionTerm + pressureTerm); % Lax Euler hybrid
     
             end
         end
