@@ -1,4 +1,4 @@
-clearvars -except Re
+clearvars -except Re lax_factor
 close all
 clc
 
@@ -12,7 +12,6 @@ U_lid = 1; % Lid velocity = 1m/s
 alpha_v = 1; % v-velocity relaxation factor
 alpha_u = 1; % u-velocity relaxation factor
 alpha_p = 0.3; % pressure relaxation factor
-lax_factor = 0.5; % blending factor of lax method
 
 % Derived Parameters
 dy = height / numCellsY; % Cell size along the y-direction
@@ -29,6 +28,10 @@ steadyTolerance = 1e-8; % steady state tolerance
 
 if ~exist('Re', 'var')
     Re = 100; % Set Re if script ran by itself
+end
+
+if ~exist('lax_factor', 'var')
+    lax_factor = 0.01; % Set blending factor if script ran by itself
 end
 
 % Ensure uniform grid size
