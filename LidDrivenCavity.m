@@ -116,7 +116,9 @@ A(1,:) = 0;
 A(1,1) = 1;
 
 %% Residual Plot Setup
-figure("WindowStyle","docked");
+figure_1 = figure;
+figure_1.WindowStyle = "normal";
+figure_1.WindowStyle = "docked";
 hResidual = animatedline('Color', 'red', 'LineWidth', 1.5, 'DisplayName', 'Mass Residual (Inner Loop)');
 hUDiff = animatedline('Color', 'green', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
 hVDiff = animatedline('Color', 'blue', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'v Diff (Outer Loop)');
@@ -470,7 +472,6 @@ p_center = p_new(iC, jC);
 % Velocity magnitude
 U_center_mag = sqrt(u_center.^2 + v_center.^2);
 
-figure_1 = figure(1);
 figure_1.Theme = "light";
 contourf(x, y, U_center_mag, 20, 'LineColor', 'none'); % 20 contour levels
 colorbar;
