@@ -31,7 +31,7 @@ if ~exist('Re', 'var')
 end
 
 if ~exist('lax_factor', 'var')
-    lax_factor = 0.01; % Set blending factor if script ran by itself
+    lax_factor = 5e-2; % Set blending factor if script ran by itself
 end
 
 % Ensure uniform grid size
@@ -153,6 +153,10 @@ while ~steadyReached && n < maxSteps
     while residual > maxResidual && iterations < maxIterations
     
         iterations = iterations + 1;
+
+        if residual > 1
+            return
+        end
     
         %% x-momentum equation - Interior
         for i = 2:numCellsY + 1
