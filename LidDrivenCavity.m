@@ -1,6 +1,13 @@
-main();
+function LidDrivenCavity()
+    % for Re = [100, 400, 1000]
+    %     for lax_factor = 5e-2:5e-2:0.5
+    %         fprintf('Starting blending factor = %d...\n', lax_factor);
+            main(); 
+    %     end
+    % end
+end
 
-function main()
+function main(Re, lax_factor)
     close all
     clc
     
@@ -598,6 +605,8 @@ function main()
     grid on;
     
     %% Save results
+    exportGraphics();
+    
     % Create results folder
     function createFolder()
     
