@@ -120,8 +120,7 @@ A(1,:) = 0;
 A(1,1) = 1;
 
 %% Residual Plot Setup
-set(0,'DefaultFigureWindowStyle','docked')
-figure;
+figure("WindowStyle","docked");
 hResidual = animatedline('Color', 'red', 'LineWidth', 1.5, 'DisplayName', 'Mass Residual (Inner Loop)');
 hUDiff = animatedline('Color', 'green', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'u Diff (Outer Loop)');
 hVDiff = animatedline('Color', 'blue', 'LineWidth', 1.5, 'LineStyle', '--', 'DisplayName', 'v Diff (Outer Loop)');
