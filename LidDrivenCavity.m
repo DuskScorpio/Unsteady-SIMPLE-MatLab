@@ -1,4 +1,6 @@
-clearvars -except Re
+main();
+
+function main()
 close all
 clc
 
@@ -29,6 +31,20 @@ steadyTolerance = 1e-6; % steady state tolerance
 if ~exist('Re', 'var')
     Re = 100; % Set Re if script ran by itself
 end
+
+% Shared variables
+[~, branchName] = system('git rev-parse --abbrev-ref HEAD');
+branchName = strtrim(branchName); % Get branch name
+
+if strcmp(branchName, "master")
+    branchName = "Euler";
+end
+
+[scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
+ReString = num2str(Re, '%g');
+filePrefix = "Re" + ReString + "_";
+timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm-ss")); % Get current time (e.g. 19Jan_02-38)
+resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
 
 % Ensure uniform grid size
 if mod(numCellsX,1) ~= 0
@@ -150,6 +166,12 @@ while ~steadyReached && n < maxSteps
     while residual > maxResidual && iterations < maxIterations
     
         iterations = iterations + 1;
+
+        if residual > 1
+            createFolder();
+            writeLog();
+            return
+        end
     
         %% x-momentum equation - Interior
         for i = 2:numCellsY + 1
@@ -449,6 +471,8 @@ end
 
 elapsedTime = toc;  % Stop timer and get elapsed seconds
 fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
+createFolder();
+writeLog();
 
 %% Plot setup
 % x grid
@@ -527,13 +551,11 @@ x_center = x(:);
 
 %% Compare with Ghia
 % Read Ghia et al. (1982) benchmark values 
-[scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
 ghiaFolder = fullfile(scriptDir, 'Ghia Centerline');
 u_table = readtable(fullfile(ghiaFolder, 'Ghia-u-centerline.csv'), ReadVariableNames=true, VariableNamingRule="preserve");
 v_table = readtable(fullfile(ghiaFolder, 'Ghia-v-centerline.csv'), ReadVariableNames=true, VariableNamingRule="preserve");
 
 % Extract data
-ReString = num2str(Re, '%g');
 ghia_y = u_table.y;
 ghia_x = v_table.x;
 ghia_u = u_table.(ReString);
@@ -560,23 +582,19 @@ title(['Horizontal Centerline v Velocity Re = ', ReString]);
 grid on;
 
 %% Save results
+exportGraphics();
+
 % Create results folder
-[~, branchName] = system('git rev-parse --abbrev-ref HEAD');
-branchName = strtrim(branchName); % Get branch name
-
-if strcmp(branchName, "master")
-    branchName = "Euler";
-end
-
-filePrefix = "Re" + ReString + "_";
-timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm")); % Get current time (e.g. 19Jan_02-38)
-
-resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
+function createFolder()
 
 mkdir(resultsFolder);   % Create the folder
 disp(["Folder created: " resultsFolder]);
 
+end
+
 % Performance Log
+function writeLog()
+
 logFile = fullfile(resultsFolder, filePrefix + "Performance_Log.txt");
 fileID = fopen(logFile, 'w');
 fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
@@ -600,7 +618,11 @@ end
 
 fclose(fileID);
 
-%% Exporting graphics
+end
+
+% Export graphics
+function exportGraphics()
+
 % Set the default figure property for the Axes Toolbar to 'never'
 set(groot, 'defaultAxesToolbarVisible', 'off');
 % Export
@@ -612,3 +634,7 @@ exportgraphics(figure(3), fullfile(resultsFolder, filePrefix + "v_Velocity.png")
 exportgraphics(figure(4), fullfile(resultsFolder, filePrefix + "Pressure.png"), 'Resolution', 300);
 exportgraphics(figure(5), fullfile(resultsFolder, filePrefix + "u_Centerline.png"), 'Resolution', 300);
 exportgraphics(figure(6), fullfile(resultsFolder, filePrefix + "v_Centerline.png"), 'Resolution', 300);
+
+end
+
+end
