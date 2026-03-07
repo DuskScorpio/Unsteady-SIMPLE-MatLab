@@ -1,6 +1,10 @@
-main();
+function LidDrivenCavity()
+    for Re = [100, 400, 1000]
+        main();
+    end
+end
 
-function main()
+function main(Re)
     close all
     clc
     
