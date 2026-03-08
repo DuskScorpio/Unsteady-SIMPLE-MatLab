@@ -1,10 +1,10 @@
 function LidDrivenCavity()
-    % for Re = [100, 400, 1000]
-    %     for lax_factor = 5e-2:5e-2:0.5
-    %         fprintf('Starting blending factor = %d...\n', lax_factor);
-            main(); 
-    %     end
-    % end
+    for Re = [100, 400, 1000]
+        for lax_factor = 1e-3:1e-3:1e-2
+            fprintf('Starting blending factor = %d...\n', lax_factor);
+            main(Re, lax_factor); 
+        end
+    end
 end
 
 function main(Re, lax_factor)
@@ -54,7 +54,7 @@ function main(Re, lax_factor)
     [scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
     ReString = num2str(Re, '%g');
     filePrefix = "Re" + ReString + "_";
-    timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm")); % Get current time (e.g. 19Jan_02-38)
+    timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm-ss")); % Get current time (e.g. 19Jan_02-38)
     resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
     
     % Ensure uniform grid size
@@ -179,6 +179,8 @@ function main(Re, lax_factor)
             iterations = iterations + 1;
     
             if residual > 1
+                elapsedTime = toc;  % Stop timer and get elapsed seconds
+                fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
                 createFolder();
                 writeLog();
                 return
