@@ -33,7 +33,7 @@ function main(Re, lax_factor)
     maxSteps = round(timeEnd / dt); % Max number of time steps
     maxIterations = 200; % Max number of SIMPLE iterations
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
-    steadyTolerance = 1e-2; % steady state tolerance
+    steadyTolerance = 1e-6; % steady state tolerance
     
     if ~exist('Re', 'var')
         Re = 100; % Set Re if script ran by itself
@@ -497,8 +497,6 @@ function main(Re, lax_factor)
     
     elapsedTime = toc;  % Stop timer and get elapsed seconds
     fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
-    createFolder();
-    writeLog();
     
     %% Plot setup
     % x grid
@@ -585,6 +583,14 @@ function main(Re, lax_factor)
     ghia_x = v_table.x;
     ghia_u = u_table.(ReString);
     ghia_v = v_table.(ReString);
+
+    % Map simulation results to Ghia's grid points
+    u_centerline_interp = interp1(y_center, u_centerline, ghia_y, 'linear');
+    v_centerline_interp = interp1(x_center, v_centerline, ghia_x, 'linear');
+    
+    % Calculate Root Mean Square Error (RMSE)
+    u_rmse = sqrt(mean((u_centerline_interp - ghia_u).^2));
+    v_rmse = sqrt(mean((v_centerline_interp - ghia_v).^2));
     
     figure("Theme", "light");
     plot(u_centerline, y_center, 'b'); hold on;
@@ -605,6 +611,9 @@ function main(Re, lax_factor)
     legend('SIMPLE','Ghia et al.');
     title(['Horizontal Centerline v Velocity Re = ', ReString]);
     grid on;
+    
+    createFolder();
+    writeLog();
     
     %% Save results
     exportGraphics();
@@ -635,7 +644,9 @@ function main(Re, lax_factor)
         fprintf(fileID, 'Total Time Completed: %.4f seconds\n', n * dt);
         fprintf(fileID, 'Total SIMPLE Iterations: %d\n', totalIterations);
         fprintf(fileID, 'Total Elapsed Time: %.2f seconds\n', elapsedTime);
-        fprintf(fileID, 'Final Steady State Tolerance %g\n', maxDiff);
+        fprintf(fileID, 'Final Steady State Tolerance: %g\n', maxDiff);
+        fprintf(fileID, 'u Velocity Accuracy: %g\n', u_rmse);
+        fprintf(fileID, 'v Velocity Accuracy: %g\n', v_rmse);
         
         if n > 0
             fprintf(fileID, 'Avg Iterations per Time Step: %.2f\n', totalIterations / n);
