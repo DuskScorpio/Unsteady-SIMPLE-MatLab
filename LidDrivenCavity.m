@@ -33,7 +33,7 @@ function main(Re, lax_factor)
     maxSteps = round(timeEnd / dt); % Max number of time steps
     maxIterations = 200; % Max number of SIMPLE iterations
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
-    steadyTolerance = 1e-6; % steady state tolerance
+    steadyTolerance = 1e-2; % steady state tolerance
     
     if ~exist('Re', 'var')
         Re = 100; % Set Re if script ran by itself
@@ -516,6 +516,18 @@ function main(Re, lax_factor)
     u_center = 0.5 * (u_new(iC, jC) + u_new(iC, jC+1));
     v_center = 0.5 * (v_new(iC, jC) + v_new(iC+1, jC));
     p_center = p_new(iC, jC);
+
+    % Middle indices
+    j_mid = round(numCellsX/2);
+    i_mid = round(numCellsY/2);
+    
+    % Extract u vertical centerline (x = 0.5)
+    u_centerline = [U_lid; u_center(:, j_mid); 0];
+    y_center = [1; y(:); 0];
+    
+    % Extract v horizontal centerline (y = 0.5)
+    v_centerline = [0, v_center(i_mid, :), 0];
+    x_center = [0; x(:); 1];
     
     %% Contour plots
     % Velocity magnitude
@@ -560,19 +572,6 @@ function main(Re, lax_factor)
     axis square;
     xlabel('x'); ylabel('y');
     title('Pressure Contour');
-    
-    %% Extract centerline velocities for comparison with Ghia et al.
-    % Middle indices
-    j_mid = round(numCellsX/2);
-    i_mid = round(numCellsY/2);
-    
-    % Extract u vertical centerline (x = 0.5)
-    u_centerline = u_center(:, j_mid);
-    y_center = y(:);
-    
-    % Extract v horizontal centerline (y = 0.5)
-    v_centerline = v_center(i_mid, :);
-    x_center = x(:);
     
     %% Compare with Ghia
     % Read Ghia et al. (1982) benchmark values 
