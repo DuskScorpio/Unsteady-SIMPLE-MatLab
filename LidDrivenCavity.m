@@ -526,7 +526,7 @@ function main(Re, lax_factor)
     y_center = [1; y(:); 0];
     
     % Extract v horizontal centerline (y = 0.5)
-    v_centerline = [0, v_center(i_mid, :), 0];
+    v_centerline = [0; v_center(i_mid, :).'; 0];
     x_center = [0; x(:); 1];
     
     %% Contour plots
