@@ -53,7 +53,8 @@ function main(Re, lax_factor)
     
     [scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
     ReString = num2str(Re, '%g');
-    filePrefix = "Re" + ReString + "_";
+    CFLString = num2str(CFL, '%.0e');
+    filePrefix = "Re-" + ReString + "_" + "CFL-" + CFLString + "_";
     timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm-ss")); % Get current time (e.g. 19Jan_02-38)
     resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
     
