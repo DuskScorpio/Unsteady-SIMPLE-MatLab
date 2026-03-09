@@ -1,6 +1,6 @@
 function LidDrivenCavity()
     for Re = [100, 400, 1000]
-        for lax_factor = 1e-3:1e-3:1e-2
+        for lax_factor = 1e-2
             fprintf('Starting blending factor = %d...\n', lax_factor);
             main(Re, lax_factor); 
         end
@@ -16,7 +16,7 @@ function main(Re, lax_factor)
     length = 1; % Length along the positive x-directon of the flow domain 
     height = 1; % Length along the positive y-direction of the flow domain
     numCellsY = 51; % Number of cells along the y-direction
-    CFL = 0.4; % Courant number
+    CFL = 0.3; % Courant number
     U_lid = 1; % Lid velocity = 1m/s
     alpha_v = 1; % v-velocity relaxation factor
     alpha_u = 1; % u-velocity relaxation factor
@@ -29,7 +29,7 @@ function main(Re, lax_factor)
     dt = CFL * (dx / U_lid); % Time step size
     
     % Criteria
-    timeEnd = 10; % Termination time
+    timeEnd = 100; % Termination time
     maxSteps = round(timeEnd / dt); % Max number of time steps
     maxIterations = 200; % Max number of SIMPLE iterations
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
