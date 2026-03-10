@@ -1,15 +1,15 @@
 function LidDrivenCavity()
     lax_range = 10.^-(0:10);
     for Re = [100, 400, 1000]
-        for CFL = 0.1:0.1:0.5
+        for CFL = 0.1:0.1:1
             for lax_factor = lax_range
-            main(Re, lax_factor); 
+            main(Re, CFL, lax_factor); 
             end
         end
     end
 end
 
-function main(Re, lax_factor)
+function main(Re, CFL, lax_factor)
     close all
     clc
     
@@ -18,7 +18,6 @@ function main(Re, lax_factor)
     length = 1; % Length along the positive x-directon of the flow domain 
     height = 1; % Length along the positive y-direction of the flow domain
     numCellsY = 51; % Number of cells along the y-direction
-    CFL = 0.3; % Courant number
     U_lid = 1; % Lid velocity = 1m/s
     alpha_v = 1; % v-velocity relaxation factor
     alpha_u = 1; % u-velocity relaxation factor
@@ -39,10 +38,8 @@ function main(Re, lax_factor)
     
     if ~exist('Re', 'var')
         Re = 100; % Set Re if script ran by itself
-    end
-    
-    if ~exist('lax_factor', 'var')
-        lax_factor = 5e-2; % Set blending factor if script ran by itself
+        CFL = 0.3; % Courant number
+        lax_factor = 5e-2;
     end
     
     % Shared variables
