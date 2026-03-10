@@ -33,7 +33,7 @@ function main(Re, lax_factor)
     maxSteps = round(timeEnd / dt); % Max number of time steps
     maxIterations = 200; % Max number of SIMPLE iterations
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
-    steadyTolerance = 1e-6; % steady state tolerance
+    steadyTolerance = 1e-2; % steady state tolerance
     
     if ~exist('Re', 'var')
         Re = 100; % Set Re if script ran by itself
@@ -54,7 +54,8 @@ function main(Re, lax_factor)
     [scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
     ReString = num2str(Re, '%g');
     CFLString = num2str(CFL, '%.0e');
-    filePrefix = "Re-" + ReString + "_" + "CFL-" + CFLString + "_";
+    LaxString = num2str(lax_factor, '%.0e');
+    filePrefix = "Re-" + ReString + "_" + "CFL-" + CFLString + "_" + "Lax-" + LaxString + "_";
     timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm-ss")); % Get current time (e.g. 19Jan_02-38)
     resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
     
