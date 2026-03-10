@@ -1,8 +1,10 @@
 function LidDrivenCavity()
+    lax_range = 10.^-(0:10);
     for Re = [100, 400, 1000]
-        for lax_factor = 1e-2
-            fprintf('Starting blending factor = %d...\n', lax_factor);
+        for CFL = 0.1:0.1:0.5
+            for lax_factor = lax_range
             main(Re, lax_factor); 
+            end
         end
     end
 end
@@ -33,7 +35,7 @@ function main(Re, lax_factor)
     maxSteps = round(timeEnd / dt); % Max number of time steps
     maxIterations = 200; % Max number of SIMPLE iterations
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
-    steadyTolerance = 1e-2; % steady state tolerance
+    steadyTolerance = 1e-6; % steady state tolerance
     
     if ~exist('Re', 'var')
         Re = 100; % Set Re if script ran by itself
