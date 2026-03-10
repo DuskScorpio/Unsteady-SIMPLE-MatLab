@@ -55,7 +55,7 @@ function main(Re, lax_factor)
     ReString = num2str(Re, '%g');
     CFLString = num2str(CFL, '%.0e');
     LaxString = num2str(lax_factor, '%.0e');
-    filePrefix = "Re-" + ReString + "_" + "CFL-" + CFLString + "_" + "Lax-" + LaxString + "_";
+    filePrefix = "Re=" + ReString + " " + "CFL=" + CFLString + " " + "Lax=" + LaxString + " ";
     timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm-ss")); % Get current time (e.g. 19Jan_02-38)
     resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
     
