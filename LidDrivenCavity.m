@@ -50,7 +50,8 @@ function main(Re)
     CFLString = num2str(CFL, '%.0e');
     filePrefix = "Re-" + ReString + "_" + "CFL-" + CFLString + "_";
     timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm-ss")); % Get current time (e.g. 19Jan_02-38)
-    resultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName, filePrefix + timeStamp);
+    branchResultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName);
+    simulationResultsFolder = fullfile(branchResultsFolder, filePrefix + timeStamp);
     
     % Ensure uniform grid size
     if mod(numCellsX,1) ~= 0
@@ -89,6 +90,8 @@ function main(Re)
     totalIterations = 0;
     residual = 1;
     maxDiff = 1;
+    u_rmse = NaN;
+    v_rmse = NaN;
     
     %% Build the sparse matrix A for the pressure correction equation
     Nx = numCellsX;
@@ -591,26 +594,27 @@ function main(Re)
     legend('SIMPLE','Ghia et al.');
     title(['Horizontal Centerline v Velocity', filePrefix]);
     grid on;
-    
+
+    %% Save results
     createFolder();
     writeLog();
-    
-    %% Save results
     exportGraphics();
     
     % Create results folder
     function createFolder()
-        
-        mkdir(resultsFolder);   % Create the folder
-        disp(["Folder created: " resultsFolder]);
+    
+        mkdir(simulationResultsFolder);   % Create the folder
+        disp(["Folder created: " simulationResultsFolder]);
     
     end
     
     % Performance Log
     function writeLog()
-        
-        logFile = fullfile(resultsFolder, filePrefix + "Performance_Log.txt");
+    
+        logFile = fullfile(simulationResultsFolder, filePrefix + "Performance_Log.txt");
+        branchLogFile = fullfile(branchResultsFolder, branchName + "_Branch_Log.csv");
         fileID = fopen(logFile, 'w');
+
         fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
         fprintf(fileID, '==========================\n');
         fprintf(fileID, "File: %s\n", fileName + "_" + branchName);
@@ -626,10 +630,15 @@ function main(Re)
         fprintf(fileID, 'Final Steady State Tolerance: %g\n', maxDiff);
         fprintf(fileID, 'u Velocity Accuracy: %g\n', u_rmse);
         fprintf(fileID, 'v Velocity Accuracy: %g\n', v_rmse);
-        
-        if n > 0
-            fprintf(fileID, 'Avg Iterations per Time Step: %.2f\n', totalIterations / n);
-            fprintf(fileID, 'Avg Time per Time Step: %.4f seconds\n', elapsedTime / n);
+
+        branchLogContent = table(string(filePrefix + timeStamp), ...
+        Re, numCellsX, numCellsY, CFL, dt, alpha_p, elapsedTime, totalIterations, elapsedTime, maxDiff, u_rmse, v_rmse, ...
+            'VariableNames', {'FileName', 'Re', 'GridX', 'GridY', 'CFL', 'dt', 'Alpha_P', 'SimulatedTime', 'TotalIter', 'RealTime', 'FinalTol', 'u_RMSE', 'v_RMSE'});
+            
+        if exist(branchLogFile, 'file') == 2
+            writetable(branchLogContent, branchLogFile, 'WriteMode', 'Append', 'WriteVariableNames', false);
+        else
+            writetable(branchLogContent, branchLogFile);
         end
         
         fclose(fileID);
@@ -642,15 +651,15 @@ function main(Re)
         % Set the default figure property for the Axes Toolbar to 'never'
         set(groot, 'defaultAxesToolbarVisible', 'off');
         % Export
-        writematrix(u_centerline, fullfile(resultsFolder, filePrefix + "u_Center_Line.csv"));
-        writematrix(v_centerline, fullfile(resultsFolder, filePrefix + "v_Center_Line.csv"));
-        exportgraphics(figure(1), fullfile(resultsFolder, filePrefix + "Velocity_Magnitude.png"), 'Resolution', 300);
-        exportgraphics(figure(2), fullfile(resultsFolder, filePrefix + "u_Velocity.png"), 'Resolution', 300);
-        exportgraphics(figure(3), fullfile(resultsFolder, filePrefix + "v_Velocity.png"), 'Resolution', 300);
-        exportgraphics(figure(4), fullfile(resultsFolder, filePrefix + "Pressure.png"), 'Resolution', 300);
-        exportgraphics(figure(5), fullfile(resultsFolder, filePrefix + "u_Centerline.png"), 'Resolution', 300);
-        exportgraphics(figure(6), fullfile(resultsFolder, filePrefix + "v_Centerline.png"), 'Resolution', 300);
-    
+        writematrix(u_centerline, fullfile(simulationResultsFolder, filePrefix + "u_Center_Line.csv"));
+        writematrix(v_centerline, fullfile(simulationResultsFolder, filePrefix + "v_Center_Line.csv"));
+        exportgraphics(figure(1), fullfile(simulationResultsFolder, filePrefix + "Velocity_Magnitude.png"), 'Resolution', 300);
+        exportgraphics(figure(2), fullfile(simulationResultsFolder, filePrefix + "u_Velocity.png"), 'Resolution', 300);
+        exportgraphics(figure(3), fullfile(simulationResultsFolder, filePrefix + "v_Velocity.png"), 'Resolution', 300);
+        exportgraphics(figure(4), fullfile(simulationResultsFolder, filePrefix + "Pressure.png"), 'Resolution', 300);
+        exportgraphics(figure(5), fullfile(simulationResultsFolder, filePrefix + "u_Centerline.png"), 'Resolution', 300);
+        exportgraphics(figure(6), fullfile(simulationResultsFolder, filePrefix + "v_Centerline.png"), 'Resolution', 300);
+        
     end
 
 end
