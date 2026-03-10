@@ -33,7 +33,7 @@ function main(Re, lax_factor)
     maxSteps = round(timeEnd / dt); % Max number of time steps
     maxIterations = 200; % Max number of SIMPLE iterations
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
-    steadyTolerance = 1e-2; % steady state tolerance
+    steadyTolerance = 1e-6; % steady state tolerance
     
     if ~exist('Re', 'var')
         Re = 100; % Set Re if script ran by itself
@@ -158,7 +158,7 @@ function main(Re, lax_factor)
     axis square;
     xlabel('Total SIMPLE Iterations');
     ylabel('RMS Residual');
-    title('Solver Convergence');
+    title(["Solver Convergence", filePrefix]);
     legend('show', 'Location', 'southwest');
     
     %% Start timer
@@ -543,7 +543,7 @@ function main(Re, lax_factor)
     axis square;
     axis([0 1 0 1]);
     xlabel('x'); ylabel('y');
-    title('Streamlines + Velocity Magnitude');
+    title(['Streamlines + Velocity Magnitude', filePrefix]);
     grid on;
     
     % u velocity
@@ -553,7 +553,7 @@ function main(Re, lax_factor)
     colormap(jet(21));
     axis square;
     xlabel('x'); ylabel('y');
-    title('u velocity Contour');
+    title(['u velocity Contour', filePrefix]);
     
     % v velocity
     figure("Theme", "light");
@@ -562,7 +562,7 @@ function main(Re, lax_factor)
     colormap(jet(21));
     axis square;
     xlabel('x'); ylabel('y');
-    title('v velocity Contour');
+    title(['v velocity Contour', filePrefix]);
     
     % pressure
     figure("Theme", "light");
@@ -571,7 +571,7 @@ function main(Re, lax_factor)
     colormap(jet(21));
     axis square;
     xlabel('x'); ylabel('y');
-    title('Pressure Contour');
+    title(['Pressure Contour', filePrefix]);
     
     %% Compare with Ghia
     % Read Ghia et al. (1982) benchmark values 
@@ -600,7 +600,7 @@ function main(Re, lax_factor)
     xlabel('u');
     ylabel('y');
     legend('SIMPLE', 'Ghia et al.');
-    title(['Vertical Centerline u Velocity Re = ', ReString]);
+    title(['Vertical Centerline u Velocity', filePrefix]);
     grid on;
     
     figure("Theme", "light");
@@ -610,7 +610,7 @@ function main(Re, lax_factor)
     xlabel('x');
     ylabel('v');
     legend('SIMPLE','Ghia et al.');
-    title(['Horizontal Centerline v Velocity Re = ', ReString]);
+    title(['Horizontal Centerline v Velocity', filePrefix]);
     grid on;
     
     createFolder();
