@@ -151,7 +151,7 @@ function main(Re)
     axis square;
     xlabel('Total SIMPLE Iterations');
     ylabel('RMS Residual');
-    title('Solver Convergence');
+    title(["Solver Convergence", filePrefix]);
     legend('show', 'Location', 'southwest');
     
     %% Start timer
@@ -522,7 +522,7 @@ function main(Re)
     axis square;
     axis([0 1 0 1]);
     xlabel('x'); ylabel('y');
-    title('Streamlines + Velocity Magnitude');
+    title(['Streamlines + Velocity Magnitude', filePrefix]);
     grid on;
     
     % u velocity
@@ -532,7 +532,7 @@ function main(Re)
     colormap(jet(21));
     axis square;
     xlabel('x'); ylabel('y');
-    title('u velocity Contour');
+    title(['u velocity Contour', filePrefix]);
     
     % v velocity
     figure("Theme", "light");
@@ -541,7 +541,7 @@ function main(Re)
     colormap(jet(21));
     axis square;
     xlabel('x'); ylabel('y');
-    title('v velocity Contour');
+    title(['v velocity Contour', filePrefix]);
     
     % pressure
     figure("Theme", "light");
@@ -550,7 +550,7 @@ function main(Re)
     colormap(jet(21));
     axis square;
     xlabel('x'); ylabel('y');
-    title('Pressure Contour');
+    title(['Pressure Contour', filePrefix]);
     
     %% Compare with Ghia
     % Read Ghia et al. (1982) benchmark values 
@@ -579,7 +579,7 @@ function main(Re)
     xlabel('u');
     ylabel('y');
     legend('SIMPLE', 'Ghia et al.');
-    title(['Vertical Centerline u Velocity Re = ', ReString]);
+    title(['Vertical Centerline u Velocity', filePrefix]);
     grid on;
     
     figure("Theme", "light");
@@ -589,7 +589,7 @@ function main(Re)
     xlabel('x');
     ylabel('v');
     legend('SIMPLE','Ghia et al.');
-    title(['Horizontal Centerline v Velocity Re = ', ReString]);
+    title(['Horizontal Centerline v Velocity', filePrefix]);
     grid on;
     
     createFolder();
