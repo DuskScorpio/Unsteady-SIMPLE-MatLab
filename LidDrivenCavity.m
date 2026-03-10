@@ -48,7 +48,7 @@ function main(Re)
     [scriptDir, fileName, ~] = fileparts(mfilename('fullpath')); % Get file path and file name
     ReString = num2str(Re, '%g');
     CFLString = num2str(CFL, '%.0e');
-    filePrefix = "Re-" + ReString + "_" + "CFL-" + CFLString + "_";
+    filePrefix = "Re=" + ReString + " " + "CFL=" + CFLString + " ";
     timeStamp = string(datetime("now", "Format", "dd-MMM_HH-mm-ss")); % Get current time (e.g. 19Jan_02-38)
     branchResultsFolder = fullfile(scriptDir, "Results_" + fileName + "_" + branchName);
     simulationResultsFolder = fullfile(branchResultsFolder, filePrefix + timeStamp);
