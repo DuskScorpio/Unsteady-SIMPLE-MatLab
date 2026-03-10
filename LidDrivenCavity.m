@@ -657,7 +657,7 @@ function main(Re, lax_factor)
 
         branchLogContent = table(string(filePrefix + timeStamp), ...
         Re, numCellsX, numCellsY, CFL, dt, alpha_p, lax_factor, elapsedTime, totalIterations, elapsedTime, maxDiff, u_rmse, v_rmse, ...
-            'VariableNames', {'FileName', 'Re', 'GridX', 'GridY', 'CFL', 'dt', 'Alpha_P', 'LaxFactor', 'SimulatedTime', 'TotalIter', 'RealTime', 'FinalTol', 'u_RMSE', 'v_RMSE'});
+            'VariableNames', {'FileName', 'Re', 'GridX', 'GridY', 'CFL', 'dt', 'Alpha_P', 'LaxFactor', 'SimulatedTime', 'TotalIterations', 'RealTime', 'FinalTolerance', 'uAccuracy', 'vAccuracy'});
             
         if exist(branchLogFile, 'file') == 2
             writetable(branchLogContent, branchLogFile, 'WriteMode', 'Append', 'WriteVariableNames', false);
