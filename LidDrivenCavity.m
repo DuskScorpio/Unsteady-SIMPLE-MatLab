@@ -24,7 +24,7 @@ function main(Re, CFL)
     U_lid = 1; % Lid velocity = 1m/s
     alpha_v = 1; % v-velocity relaxation factor
     alpha_u = 1; % u-velocity relaxation factor
-    alpha_p = 0.3; % pressure relaxation factor
+    alpha_p = 0.1; % pressure relaxation factor
     
     % Derived Parameters
     dy = height / numCellsY; % Cell size along the y-direction
@@ -67,10 +67,12 @@ function main(Re, CFL)
     NU = MU / RHO; % Kinematic viscosity
     
     %% Variables
+    u_old_old = zeros(numCellsY + 2, numCellsX + 3); % u velocity from two time steps back (for leap frog)
     u_old = zeros(numCellsY + 2, numCellsX + 3); % u velocity from previous time step
     u_star = zeros(numCellsY + 2, numCellsX + 3); % u velocity prediction
     u_new = zeros(numCellsY + 2, numCellsX + 3); % Corrected u velocity
     
+    v_old_old = zeros(numCellsY + 3, numCellsX + 2); % v velocity from two time steps back (for leap frog)
     v_old = zeros(numCellsY + 3, numCellsX + 2); % v velocity from previous time step
     v_star = zeros(numCellsY + 3, numCellsX + 2); % v velocity prediction
     v_new = zeros(numCellsY + 3, numCellsX + 2); % Corrected v velocity
@@ -232,7 +234,14 @@ function main(Re, CFL)
                     diffusionTerm = NU * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
                     pressureTerm = (p_w - p_e) / (RHO * dx);
         
-                    u_star(i, j) = u_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                    % Leap frog method: u^(n+1) = u^(n-1) + 2*dt*(RHS)^n
+                    if n == 1
+                        % First time step: use Euler explicit
+                        u_star(i, j) = u_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                    else
+                        % Leap frog for n >= 2
+                        u_star(i, j) = u_old_old(i, j) + 2*dt * (convectionTerm + diffusionTerm + pressureTerm);
+                    end
                     
                 end
             end
@@ -299,7 +308,15 @@ function main(Re, CFL)
                     convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s - v_n_interp * v_n) / dy; % LUDS
                     diffusionTerm = NU * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
                     pressureTerm = (p_s - p_n) / (RHO * dy);
-                    v_star(i, j) = v_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                    
+                    % Leap frog method: v^(n+1) = v^(n-1) + 2*dt*(RHS)^n
+                    if n == 1
+                        % First time step: use Euler explicit
+                        v_star(i, j) = v_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                    else
+                        % Leap frog for n >= 2
+                        v_star(i, j) = v_old_old(i, j) + 2*dt * (convectionTerm + diffusionTerm + pressureTerm);
+                    end
         
                 end
             end
@@ -477,6 +494,9 @@ function main(Re, CFL)
             steadyReached = true;
         end
     
+        % Update time step velocities for leap frog method
+        u_old_old = u_old;
+        v_old_old = v_old;
         u_old = u;
         v_old = v;
         p_old = p;
@@ -629,7 +649,7 @@ function main(Re, CFL)
 
         fprintf(fileID, 'SIMULATION PERFORMANCE LOG\n');
         fprintf(fileID, '==========================\n');
-        fprintf(fileID, "File: %s\n", fileName + "_" + branchName);
+        fprintf(fileID, "File: %s\n", fileName + "_" + branchName, "Leap Frog");
         fprintf(fileID, 'Reynolds Number: %d\n', Re);
         fprintf(fileID, 'Grid Size: %d x %d\n', numCellsX, numCellsY);
         fprintf(fileID, 'Courant Number: %g\n', CFL);
