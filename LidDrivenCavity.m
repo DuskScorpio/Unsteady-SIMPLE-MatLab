@@ -1,20 +1,26 @@
 function LidDrivenCavity()
     for Re = [100, 400, 1000]
-        main(Re);
+        for CFL = 0.1:0.1:1
+            main(Re, CFL); 
+        end
     end
 end
 
-function main(Re)
+function main(Re, CFL)
 
     close all
     clc
     
     %% Setup
+    if ~exist('Re', 'var')
+        Re = 100; % Set Re if script ran by itself
+        CFL = 0.00001; % Courant number
+    end
+
     % Primary Parameters
     length = 1; % Length along the positive x-directon of the flow domain 
     height = 1; % Length along the positive y-direction of the flow domain
     numCellsY = 51; % Number of cells along the y-direction
-    CFL = 0.1; % Courant number
     U_lid = 1; % Lid velocity = 1m/s
     alpha_v = 1; % v-velocity relaxation factor
     alpha_u = 1; % u-velocity relaxation factor
@@ -33,9 +39,6 @@ function main(Re)
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
     steadyTolerance = 1e-6; % steady state tolerance
     
-    if ~exist('Re', 'var')
-        Re = 100; % Set Re if script ran by itself
-    end
     
     % Shared variables
     [~, branchName] = system('git rev-parse --abbrev-ref HEAD');
@@ -177,6 +180,8 @@ function main(Re)
             iterations = iterations + 1;
     
             if residual > 1
+                elapsedTime = toc;  % Stop timer and get elapsed seconds
+                fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
                 createFolder();
                 writeLog();
                 return
