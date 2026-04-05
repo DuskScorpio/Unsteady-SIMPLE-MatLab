@@ -231,16 +231,17 @@ function main(Re, CFL)
                     end
         
                     convectionTerm = (u_w_interp * u_w - u_e_interp * u_e) / dx + (v_s_interp * u_s_interp - v_n_interp * u_n_interp) / dy; % LUDS
-                    diffusionTerm = NU * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
+                    diffusionTermEuler = NU * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
+                    diffusionTerm = NU * ((u_E - u_old_old(i, j) + u_W) / (dx * dx) + (u_N - u_old_old(i, j) + u_S) / (dy * dy)); % DuFort-Frankel for u_P
                     pressureTerm = (p_w - p_e) / (RHO * dx);
         
                     % Leap frog method: u^(n+1) = u^(n-1) + 2*dt*(RHS)^n
                     if n == 1
                         % First time step: use Euler explicit
-                        u_star(i, j) = u_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                        u_star(i, j) = u_old(i, j) + dt * (convectionTerm + diffusionTermEuler + pressureTerm);
                     else
                         % Leap frog for n >= 2
-                        u_star(i, j) = u_old_old(i, j) + 2*dt * (convectionTerm + diffusionTerm + pressureTerm);
+                        u_star(i, j) = (u_old_old(i, j) + 2 * dt * (convectionTerm + diffusionTerm + pressureTerm)) / (1 + 2 * dt * NU / (dx * dx) + 2 * dt * NU / (dy * dy));
                     end
                     
                 end
@@ -306,16 +307,17 @@ function main(Re, CFL)
                     end
         
                     convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s - v_n_interp * v_n) / dy; % LUDS
-                    diffusionTerm = NU * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
+                    diffusionTermEuler = NU * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
+                    diffusionTerm = NU * ((v_E - v_old_old(i, j) + v_W) / (dx * dx) + (v_N - v_old_old(i, j) + v_S) / (dy * dy));  % DuFort-Frankel for v_P
                     pressureTerm = (p_s - p_n) / (RHO * dy);
                     
                     % Leap frog method: v^(n+1) = v^(n-1) + 2*dt*(RHS)^n
                     if n == 1
                         % First time step: use Euler explicit
-                        v_star(i, j) = v_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                        v_star(i, j) = v_old(i, j) + dt * (convectionTerm + diffusionTermEuler + pressureTerm);
                     else
                         % Leap frog for n >= 2
-                        v_star(i, j) = v_old_old(i, j) + 2*dt * (convectionTerm + diffusionTerm + pressureTerm);
+                        v_star(i, j) = (v_old_old(i, j) + 2*dt * (convectionTerm + diffusionTerm + pressureTerm)) / (1 + 2 * dt * NU / (dx * dx) + 2 * dt * NU / (dy * dy));
                     end
         
                 end
