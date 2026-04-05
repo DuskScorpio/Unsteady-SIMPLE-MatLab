@@ -64,6 +64,7 @@ function main(Re, CFL)
     % Fluid properties
     MU = 1e-3; % Viscosity of the fluid
     RHO = (MU * Re) / (U_lid * length); % Density of the fluid
+    NU = MU / RHO; % Kinematic viscosity
     
     %% Variables
     u_old = zeros(numCellsY + 2, numCellsX + 3); % u velocity from previous time step
@@ -228,7 +229,7 @@ function main(Re, CFL)
                     end
         
                     convectionTerm = (u_w_interp * u_w - u_e_interp * u_e) / dx + (v_s_interp * u_s_interp - v_n_interp * u_n_interp) / dy; % LUDS
-                    diffusionTerm = (MU / RHO) * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
+                    diffusionTerm = NU * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
                     pressureTerm = (p_w - p_e) / (RHO * dx);
         
                     u_star(i, j) = u_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
@@ -296,7 +297,7 @@ function main(Re, CFL)
                     end
         
                     convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s - v_n_interp * v_n) / dy; % LUDS
-                    diffusionTerm = (MU / RHO) * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
+                    diffusionTerm = NU * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
                     pressureTerm = (p_s - p_n) / (RHO * dy);
                     v_star(i, j) = v_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
         
