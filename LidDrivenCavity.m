@@ -22,8 +22,8 @@ function main(Re, CFL)
     height = 1; % Length along the positive y-direction of the flow domain
     numCellsY = 51; % Number of cells along the y-direction
     U_lid = 1; % Lid velocity = 1m/s
-    alpha_v = 1; % v-velocity relaxation factor
-    alpha_u = 1; % u-velocity relaxation factor
+    alpha_v = 0.1; % v-velocity relaxation factor
+    alpha_u = 0.1; % u-velocity relaxation factor
     alpha_p = 0.1; % pressure relaxation factor
     
     % Derived Parameters
