@@ -108,8 +108,8 @@ function main(Re, CFL)
     Ny = numCellsY;
     N  = Nx * Ny;
     
-    a_EW = (dt * dy) / (RHO * dx);
-    a_NS = (dt * dx) / (RHO * dy);
+    a_EW = (2 * dt * dy) / (RHO * dx);
+    a_NS = (2 * dt * dx) / (RHO * dy);
     a_P  = 2*a_EW + 2*a_NS;
     
     A = sparse(N, N);
