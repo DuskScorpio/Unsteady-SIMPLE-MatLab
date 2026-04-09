@@ -102,8 +102,8 @@ function main(Re, CFL)
     Ny = numCellsY;
     N  = Nx * Ny;
     
-    a_EW = dt / (RHO * dx * dx);
-    a_NS = dt / (RHO * dy * dy);
+    a_EW = (dt * dy) / (RHO * dx);
+    a_NS = (dt * dx) / (RHO * dy);
     a_P  = 2*a_EW + 2*a_NS;
     
     A = sparse(N, N);
@@ -326,7 +326,7 @@ function main(Re, CFL)
             %% Pressure correction - Interior
             for i = 2:numCellsY + 1
                 for j = 2:numCellsX + 1
-                    b(i, j) = (u_star(i, j) - u_star(i, j + 1)) / dx + (v_star(i + 1, j) - v_star(i, j)) / dy;
+                    b(i, j) = (u_star(i, j) - u_star(i, j + 1)) * dy + (v_star(i + 1, j) - v_star(i, j)) * dx;
                 end
             end
     
