@@ -404,8 +404,14 @@ function main(Re, CFL)
             for i = 2:numCellsY + 1
                 for j = 3:numCellsX + 1
                
-                u_new(i, j) = u_star(i, j) + alpha_u * dt / (RHO * dx) * (p_prime(i, j - 1) - p_prime(i, j));
-        
+                    if n == 1
+                        % Match the Euler/Lax step (1 * dt)
+                        u_new(i, j) = u_star(i, j) + alpha_u * dt / (RHO * dx) * (p_prime(i, j - 1) - p_prime(i, j));
+                    else
+                        % Match the Leapfrog step (2 * dt)
+                        u_new(i, j) = u_star(i, j) + alpha_u * (2 * dt) / (RHO * dx) * (p_prime(i, j - 1) - p_prime(i, j));
+                    end
+
                 end
             end
         
@@ -432,7 +438,13 @@ function main(Re, CFL)
             for i = 3:numCellsY + 1
                 for j = 2:numCellsX + 1
         
-                    v_new(i, j) = v_star(i, j) + alpha_v * dt / (RHO * dy) * (p_prime(i + 1, j) - p_prime(i, j));
+                    if n == 1
+                        % Match the Euler/Lax step (1 * dt)
+                        v_new(i, j) = v_star(i, j) + alpha_v * dt / (RHO * dy) * (p_prime(i + 1, j) - p_prime(i, j));
+                    else
+                        % Match the Leapfrog step (2 * dt)
+                        v_new(i, j) = v_star(i, j) + alpha_v * (2 * dt) / (RHO * dy) * (p_prime(i + 1, j) - p_prime(i, j));
+                    end
         
                 end
             end
