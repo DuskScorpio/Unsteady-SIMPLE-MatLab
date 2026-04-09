@@ -25,6 +25,10 @@ function main(Re, CFL)
     alpha_v = 0.1; % v-velocity relaxation factor
     alpha_u = 0.1; % u-velocity relaxation factor
     alpha_p = 0.1; % pressure relaxation factor
+
+    % RAW filter parameters
+    alpha_RAW = 0.1;
+    nu_filter = 0.53;
     
     % Derived Parameters
     dy = height / numCellsY; % Cell size along the y-direction
@@ -494,6 +498,23 @@ function main(Re, CFL)
         if maxDiff < steadyTolerance
             fprintf('Steady-state reached at time %d (Tolerance = %.3e)\n', n * dt, maxDiff);
             steadyReached = true;
+        end
+    
+        %% Apply Robert-Asselin-Williams (RAW) filter for leap frog stability
+        % Filter: u_filt = u + alpha_RAW/2 * (u_old - u)
+        % This damps computational modes in the leap frog scheme
+
+        if n > 1
+            d_u = u_old_old - 2*u_old + u;
+            d_v = v_old_old - 2*v_old + v;
+
+            % Filter the middle step (n)
+            u_old = u_old + nu_filter * alpha_RAW * d_u;
+            v_old = v_old + nu_filter * alpha_RAW * d_v;
+
+            % Filter the new step (n+1)
+            u = u + nu_filter * (alpha_RAW - 1) * d_u;
+            v = v + nu_filter * (alpha_RAW - 1) * d_v;
         end
     
         % Update time step velocities for leap frog method
