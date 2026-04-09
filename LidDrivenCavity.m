@@ -572,6 +572,12 @@ function main(Re, CFL)
     ghia_x = v_table.x;
     ghia_u = u_table.(ReString);
     ghia_v = v_table.(ReString);
+    
+    % Remove incorrect data points (set to NaN to exclude from RMSE calculation)
+    % x=0.9063 is only incorrect for Re=400
+    if Re == 400
+        ghia_v(ghia_x == 0.9063) = NaN;
+    end
 
     % Map simulation results to Ghia's grid points
     u_centerline_interp = interp1(y_center, u_centerline, ghia_y, 'linear');
