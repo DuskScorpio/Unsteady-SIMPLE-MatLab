@@ -1,5 +1,5 @@
 function LidDrivenCavity()
-    for Re = [100, 400, 1000]
+    for Re = [400]
         for CFL = 0.1:0.1:1
             main(Re, CFL); 
         end
@@ -584,9 +584,9 @@ function main(Re, CFL)
     v_centerline_interp = interp1(x_center, v_centerline, ghia_x, 'linear');
     
     % Calculate Root Mean Square Error (RMSE)
-    u_rmse = sqrt(mean((u_centerline_interp - ghia_u).^2));
-    v_rmse = sqrt(mean((v_centerline_interp - ghia_v).^2));
-    
+    u_rmse = sqrt(mean((u_centerline_interp - ghia_u).^2, "omitnan"));
+    v_rmse = sqrt(mean((v_centerline_interp - ghia_v).^2, "omitnan"));
+
     figure("Theme", "light");
     plot(u_centerline, y_center, 'b'); hold on;
     plot(ghia_u, ghia_y, 'o'); % Re=100
