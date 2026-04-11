@@ -1,6 +1,6 @@
 function LidDrivenCavity()
-    for Re = [400]
-        for CFL = 0.1:0.1:1
+    for Re = [100, 400, 1000]
+        for CFL = 0.1:0.1:1.5
             main(Re, CFL); 
         end
     end
