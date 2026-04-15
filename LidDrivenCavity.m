@@ -646,8 +646,8 @@ function main(Re, CFL)
         fprintf(fileID, 'Total SIMPLE Iterations: %d\n', totalIterations);
         fprintf(fileID, 'Total Elapsed Time: %.2f seconds\n', elapsedTime);
         fprintf(fileID, 'Final Steady State Tolerance: %g\n', maxDiff);
-        fprintf(fileID, 'u Velocity Accuracy: %g\n', u_rmse);
-        fprintf(fileID, 'v Velocity Accuracy: %g\n', v_rmse);
+        fprintf(fileID, 'u Velocity RMSE: %g\n', u_rmse);
+        fprintf(fileID, 'v Velocity RMSE: %g\n', v_rmse);
 
         branchLogContent = table(string(filePrefix + timeStamp), ...
         Re, numCellsX, numCellsY, CFL, dt, alpha_p, n*dt, totalIterations, elapsedTime, maxDiff, u_rmse, v_rmse, ...
