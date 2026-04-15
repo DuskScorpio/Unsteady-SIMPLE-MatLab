@@ -33,7 +33,13 @@ function main(Re, CFL)
     dt = CFL * (dx / U_lid); % Time step size
     
     % Criteria
-    timeEnd = 100; % Termination time
+    if Re == 100
+        timeEnd = 15; % Termination time
+    elseif Re == 400
+        timeEnd = 35;
+    else
+        timeEnd = 50;
+    end
     maxSteps = round(timeEnd / dt); % Max number of time steps
     maxIterations = 200; % Max number of SIMPLE iterations
     maxResidual = 1e-8; % SIMPLE loop residual tolerance
@@ -165,7 +171,7 @@ function main(Re, CFL)
     tic
     
     %% Time marching
-    while ~steadyReached && n < maxSteps
+    while n < maxSteps
     
         % Print current time, iteration, and residual
         currentTime = n * dt; % if inside the outer time loop
