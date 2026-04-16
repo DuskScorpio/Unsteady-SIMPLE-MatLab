@@ -35,3 +35,4 @@ codegen/
 # Results folder
 Results_*/
 SimulationScripts/
+*png
