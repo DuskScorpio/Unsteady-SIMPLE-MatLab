@@ -1,6 +1,6 @@
 function LidDrivenCavity()
     for Re = [100, 400, 1000]
-        for CFL = 0.1:0.1:1
+        for CFL = [0.1:0.1:1]
             main(Re, CFL); 
         end
     end
@@ -528,9 +528,11 @@ function main(Re, CFL)
     U_center_mag = sqrt(u_center.^2 + v_center.^2);
     
     figure_1.Theme = "light";
-    contourf(x, y, U_center_mag, 20, 'LineColor', 'none'); % 20 contour levels
+    levels = linspace(0, 1, 20); % Fixed colormap range 0-1 with 20 levels
+    contourf(x, y, U_center_mag, levels, 'LineColor', 'none');
     colorbar;
-    colormap(jet(21));
+    colormap(jet(20));
+    caxis([0 1]); % Force colormap limits
     hold on;
     h = streamslice(xm, ym, u_center, v_center, 2, 'cubic');
     set(h,'Color','w');  % make streamlines white
