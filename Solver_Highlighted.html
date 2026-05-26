@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MATLAB Solver - Syntax Highlighted</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/matlab.min.js"></script>
+    <style>
+      body {
+        font-family: "Courier New", monospace;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      .info {
+        background-color: #e8f4f8;
+        padding: 10px;
+        border-left: 4px solid #0288d1;
+        margin-bottom: 20px;
+        border-radius: 3px;
+      }
+      pre {
+        background-color: #f8f8f8;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        border: 1px solid #ddd;
+      }
+      code {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .hljs {
+        background-color: transparent;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>MATLAB Lid-Driven Cavity Solver</h1>
+      <div class="info">
+        <strong>Instructions:</strong> Highlight all code (Ctrl+A), then copy
+        (Ctrl+C). The syntax highlighting will be preserved when pasted into
+        Word, Google Docs, or rich text editors.
+      </div>
+
+      <pre><code class="language-matlab">function main(Re, CFL)
+
+    close all
+    clc
+    
+    %% Setup
+    if ~exist('Re', 'var')
+        Re = 100; % Set Re if script ran by itself
+        CFL = 0.00001; % Courant number
+    end
+
+    % Primary Parameters
+    length = 1; % Length along the positive x-directon of the flow domain 
+    height = 1; % Length along the positive y-direction of the flow domain
+    numCellsY = 51; % Number of cells along the y-direction
+    U_lid = 1; % Lid velocity = 1m/s
+    alpha_v = 1; % v-velocity relaxation factor
+    alpha_u = 1; % u-velocity relaxation factor
+    alpha_p = 0.3; % pressure relaxation factor
+    
+    % Derived Parameters
+    dy = height / numCellsY; % Cell size along the y-direction
+    dx = dy; % Cell size along the x-direction
+    numCellsX = length / dx; % Number of cells along the x-direction
+    dt = CFL * (dx / U_lid); % Time step size
+    
+    % Criteria
+    if Re == 100
+        timeEnd = 15; % Termination time
+    elseif Re == 400
+        timeEnd = 35;
+    else
+        timeEnd = 50;
+    end
+    maxSteps = round(timeEnd / dt); % Max number of time steps
+    maxIterations = 200; % Max number of SIMPLE iterations
+    maxResidual = 1e-8; % SIMPLE loop residual tolerance
+    steadyTolerance = 1e-6; % steady state tolerance
+    
+    % Fluid properties
+    MU = 1e-3; % Viscosity of the fluid
+    RHO = (MU * Re) / (U_lid * length); % Density of the fluid
+    NU = MU / RHO; % Kinematic viscosity
+    
+    %% Variables
+    u_old = zeros(numCellsY + 2, numCellsX + 3); % u velocity from previous time step
+    u_star = zeros(numCellsY + 2, numCellsX + 3); % u velocity prediction
+    u_new = zeros(numCellsY + 2, numCellsX + 3); % Corrected u velocity
+    
+    v_old = zeros(numCellsY + 3, numCellsX + 2); % v velocity from previous time step
+    v_star = zeros(numCellsY + 3, numCellsX + 2); % v velocity prediction
+    v_new = zeros(numCellsY + 3, numCellsX + 2); % Corrected v velocity
+    
+    p_prime = zeros(numCellsY + 2, numCellsX + 2); % Pressure correction
+    p_old = zeros(numCellsY + 2, numCellsX + 2); % Pressure from previous time step
+    p = zeros(numCellsY + 2, numCellsX + 2); % Pressure
+    p_new = zeros(numCellsY + 2, numCellsX + 2); % Corrected pressure
+    
+    b = zeros(numCellsY + 2, numCellsX + 2); % Source term (for pressure correction)
+    b_new = zeros(numCellsY + 2, numCellsX + 2); % Source term (after correction)
+    
+    %% Initial Conditions
+    u_old(1, 2:numCellsX + 2) = 2*U_lid; % u velocity at lid = 1m/s
+    u = u_old; % u velocity from previous iteration
+    v = v_old; % v velocity from previous iteration
+    
+    steadyReached = false;
+    n = 0; % time step count
+    iterations = 0;
+    totalIterations = 0;
+    residual = 1;
+    maxDiff = 1;
+    u_rmse = NaN;
+    v_rmse = NaN;
+    
+    %% Build the sparse matrix A for the pressure correction equation
+    Nx = numCellsX;
+    Ny = numCellsY;
+    N  = Nx * Ny;
+    
+    a_EW = (dt * dy) / (RHO * dx);
+    a_NS = (dt * dx) / (RHO * dy);
+    a_P  = 2*a_EW + 2*a_NS;
+    
+    A = sparse(N, N);
+    
+    for i = 1:Ny
+        for j = 1:Nx
+            k = (i - 1) * Nx + j; % Row major index
+    
+            A(k,k) = a_P; % Center
+    
+            if j > 1
+                A(k, k-1) = -a_EW; % West neighbour
+            else
+                A(k,k) = A(k,k) - a_EW; % West boundary
+            end
+    
+            if j < Nx
+                A(k, k+1) = -a_EW; % East neighbour
+            else
+                A(k,k) = A(k,k) - a_EW; % East boundary
+            end
+    
+            if i < Ny
+                A(k, k+Nx) = -a_NS; % South neighbour
+            else
+                A(k,k) = A(k,k) - a_NS; % South boundary
+            end
+    
+            if i > 1
+                A(k, k-Nx) = -a_NS; % North neighbour
+            else
+                A(k,k) = A(k,k) - a_NS; % North boundary
+            end
+        end
+    end
+    
+    % Fix singularity
+    A(1,:) = 0;
+    A(1,1) = 1;
+    
+    %% Start timer
+    tic
+    
+    %% Time marching
+    while n < maxSteps
+    
+        % Print current time, iteration, and residual
+        currentTime = n * dt; % if inside the outer time loop
+        fprintf('Time = %.3f s, Iteration = %d, Residual = %.6e, Tolerance = %.6e\n', currentTime, iterations, residual, maxDiff);
+    
+        n = n + 1;
+        iterations = 0;
+        residual = 1;
+        
+        %% SIMPLE loop
+        while residual > maxResidual && iterations < maxIterations
+        
+            iterations = iterations + 1;
+    
+            if residual > 1
+                elapsedTime = toc;  % Stop timer and get elapsed seconds
+                fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
+                return
+            end
+        
+            %% x-momentum equation - Interior
+            for i = 2:numCellsY + 1
+                for j = 3:numCellsX + 1
+        
+                    u_P = u_old(i, j);
+                    u_E = u_old(i, j + 1);
+                    u_EE = u_old(i, j + 2);
+                    u_W = u_old(i, j - 1);
+                    u_WW = u_old(i, j - 2);
+                    u_N = u_old(i - 1, j);
+                    u_S = u_old(i + 1, j);
+        
+                    u_e_interp = 0.5 * (u_P + u_E);
+                    u_w_interp = 0.5 * (u_P + u_W);
+                    u_n_interp = 0.5 * (u_P + u_N);
+                    u_s_interp = 0.5 * (u_P + u_S);
+                    v_n_interp = 0.5 * (v_old(i, j) + v_old(i, j - 1));
+                    v_s_interp = 0.5 * (v_old(i + 1, j) + v_old(i + 1, j - 1));
+        
+                    p_w = p(i, j - 1);
+                    p_e = p(i, j);
+        
+                    % Second-order upwind for u_e
+                    if u_e_interp < 0
+                        u_e = 1.5*u_E - 0.5*u_EE;
+                    elseif u_e_interp > 0
+                        u_e = 1.5*u_P - 0.5*u_W;
+                    else
+                        u_e = 0;
+                    end
+        
+                    % Second-order upwind for u_w
+                    if u_w_interp < 0
+                        u_w = 1.5*u_P - 0.5*u_E;
+                    elseif u_w_interp > 0
+                        u_w = 1.5*u_W - 0.5*u_WW;
+                    else
+                        u_w = 0;
+                    end
+        
+                    convectionTerm = (u_w_interp * u_w - u_e_interp * u_e) / dx + (v_s_interp * u_s_interp - v_n_interp * u_n_interp) / dy; % LUDS
+                    diffusionTerm = NU * ((u_E - 2*u_P + u_W) / (dx * dx) + (u_N - 2*u_P + u_S) / (dy * dy));
+                    pressureTerm = (p_w - p_e) / (RHO * dx);
+        
+                    u_star(i, j) = u_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+                    
+                end
+            end
+        
+            %% x-momentum equation - Boundary
+            % Left wall (u = 0)
+            u_star(2:numCellsY + 1, 2) = 0; 
+        
+            % Left ghost cell
+            u_star(2:numCellsY + 1, 1) = - u_star(2:numCellsY + 1, 3);
+        
+            % Right wall (u = 0)
+            u_star(2:numCellsY + 1, numCellsX + 2) = 0;
+        
+            % Right ghost cell
+            u_star(2:numCellsY + 1, numCellsX + 3) = - u_star(2:numCellsY + 1, numCellsX + 1);
+        
+            % Top wall (u = 1)
+            u_star(1, 2:numCellsX + 2) = 2*U_lid - u_star(2, 2:numCellsX + 2);
+        
+            % Bottom wall (u = 0)
+            u_star(numCellsY + 2, 2:numCellsX + 2) = -(u_star(numCellsY + 1, 2:numCellsX + 2));
+        
+            %% y-momentum eq. - Interior
+            for i = 3:numCellsY + 1
+                for j = 2:numCellsX + 1
+                             
+                    v_P = v_old(i, j);
+                    v_E = v_old(i, j + 1);
+                    v_W = v_old(i, j - 1);
+                    v_N = v_old(i - 1, j);
+                    v_NN = v_old(i - 2, j);
+                    v_S = v_old(i + 1, j);
+                    v_SS = v_old(i + 2, j);
+        
+                    u_e_interp = 0.5 * (u_old(i, j + 1) + u_old(i - 1, j + 1));
+                    u_w_interp = 0.5 * (u_old(i, j) + u_old(i - 1, j));
+                    v_e_interp = 0.5 * (v_P + v_E);
+                    v_w_interp = 0.5 * (v_P + v_W);
+                    v_n_interp = 0.5 * (v_P + v_N);
+                    v_s_interp = 0.5 * (v_P + v_S);
+        
+                    p_n = p(i - 1, j);
+                    p_s = p(i, j);
+        
+                    % Second-order upwind for v_n
+                    if v_n_interp < 0
+                        v_n = 1.5*v_N - 0.5*v_NN;
+                    elseif v_n_interp > 0
+                        v_n = 1.5*v_P - 0.5*v_S;
+                    else
+                        v_n = 0;
+                    end
+        
+                    % Second-order upwind for v_s
+                    if v_s_interp < 0
+                        v_s = 1.5*v_P - 0.5*v_N;
+                    elseif v_s_interp > 0
+                        v_s = 1.5*v_S - 0.5*v_SS;
+                    else
+                        v_s = 0;
+                    end
+        
+                    convectionTerm = (u_w_interp * v_w_interp - u_e_interp * v_e_interp) / dx + (v_s_interp * v_s - v_n_interp * v_n) / dy; % LUDS
+                    diffusionTerm = NU * ((v_E - 2*v_P + v_W) / (dx * dx) + (v_N - 2*v_P + v_S) / (dy * dy));
+                    pressureTerm = (p_s - p_n) / (RHO * dy);
+                    v_star(i, j) = v_old(i, j) + dt * (convectionTerm + diffusionTerm + pressureTerm);
+        
+                end
+            end
+        
+            %% v-momentum eq. - Boundary
+            % Top wall (v = 0)
+            v_star(2, 2:numCellsX + 1) = 0;
+        
+            % Top ghost cell
+            v_star(1, 2:numCellsX + 1) = - v_star(3, 2:numCellsX + 1);
+        
+            % Bottom wall (v = 0)
+            v_star(numCellsY + 2, 2:numCellsX + 1) = 0;
+        
+            % Bottom ghost cell
+            v_star(numCellsY + 3, 2:numCellsX + 1) = - v_star(numCellsY + 1, 2:numCellsX + 1);
+        
+            % Left wall (v = 0)
+            v_star(2:numCellsY + 2, 1) = - v_star(2:numCellsY + 2, 2);
+        
+            % Right wall (v = 0)
+            v_star(2:numCellsY + 2, numCellsX + 2) = - v_star(2:numCellsY + 2, numCellsX + 1);
+    
+            %% Pressure correction - Interior
+            for i = 2:numCellsY + 1
+                for j = 2:numCellsX + 1
+                    b(i, j) = (u_star(i, j) - u_star(i, j + 1)) * dy + (v_star(i + 1, j) - v_star(i, j)) * dx;
+                end
+            end
+    
+            % Build RHS
+            b_vec = zeros(N,1);
+    
+            for i = 1:Ny
+                for j = 1:Nx
+                    k = (i - 1) * Nx + j;
+                    b_vec(k) = b(i + 1, j + 1);
+                end
+            end
+    
+            % Fix singularity
+            b_vec(1) = 0;
+    
+            % Solve
+            p_vec = A \ b_vec;
+    
+            % Map back to staggered grid p_prime(i,j)
+            p_prime(:) = 0;   % reset
+            for i = 1:Ny
+                for j = 1:Nx
+                    k = (i - 1) * Nx + j;
+                    p_prime(i + 1, j + 1) = p_vec(k);
+                end
+            end
+        
+            %% Correct pressures
+            for j = 2:numCellsX + 1
+                for i = 2:numCellsY+1
+        
+                    p_new(i, j) = p(i, j) + alpha_p * p_prime(i, j);
+        
+                end
+            end
+        
+            %% Pressure field - Boundary
+            % Left wall
+            p_new(2:numCellsY + 1, 1) = p_new(2:numCellsY + 1, 2);
+        
+            % Right wall
+            p_new(2:numCellsY + 1, numCellsX + 2) = p_new(2:numCellsY + 1, numCellsX + 1);
+        
+            % Top wall
+            p_new(1, 2:numCellsX + 1) = p_new(2, 2:numCellsX + 1);
+        
+            % Bottom wall
+            p_new(numCellsY + 2, 2:numCellsX + 1) = p_new(numCellsY + 1, 2:numCellsX + 1);
+        
+            %% Correct u velocities - Interior
+            for i = 2:numCellsY + 1
+                for j = 3:numCellsX + 1
+               
+                u_new(i, j) = u_star(i, j) + alpha_u * dt / (RHO * dx) * (p_prime(i, j - 1) - p_prime(i, j));
+        
+                end
+            end
+        
+            %% Correct u velocities - Boundary
+            % Left wall (u = 0)
+            u_new(2:numCellsY + 1, 2) = 0; 
+        
+            % Left ghost cell
+            u_new(2:numCellsY + 1, 1) = - u_new(2:numCellsY + 1, 3);
+        
+            % Right wall (u = 0)
+            u_new(2:numCellsY + 1, numCellsX + 2) = 0;
+        
+            % Right ghost cell
+            u_new(2:numCellsY + 1, numCellsX + 3) = - u_new(2:numCellsY + 1, numCellsX + 1);
+        
+            % Top wall (u = 1)
+            u_new(1, 2:numCellsX + 2) = 2*U_lid - u_new(2, 2:numCellsX + 2);
+        
+            % Bottom wall (u = 0)
+            u_new(numCellsY + 2, 2:numCellsX + 2) = -(u_new(numCellsY + 1, 2:numCellsX + 2));
+        
+            %% Correct v velocities - Interior
+            for i = 3:numCellsY + 1
+                for j = 2:numCellsX + 1
+        
+                    v_new(i, j) = v_star(i, j) + alpha_v * dt / (RHO * dy) * (p_prime(i + 1, j) - p_prime(i, j));
+        
+                end
+            end
+        
+            %% Correct v velocities - Boundary
+            % Top wall (v = 0)
+            v_new(2, 2:numCellsX + 1) = 0;
+        
+            % Top ghost cell
+            v_new(1, 2:numCellsX + 1) = - v_new(3, 2:numCellsX + 1);
+        
+            % Bottom wall (v = 0)
+            v_new(numCellsY + 2, 2:numCellsX + 1) = 0;
+        
+            % Bottom ghost cell
+            v_new(numCellsY + 3, 2:numCellsX + 1) = - v_new(numCellsY + 1, 2:numCellsX + 1);
+        
+            % Left wall (v = 0)
+            v_new(2:numCellsY + 2, 1) = - v_new(2:numCellsY + 2, 2);
+        
+            % Right wall (v = 0)
+            v_new(2:numCellsY + 2, numCellsX + 2) = - v_new(2:numCellsY + 2, numCellsX + 1);
+        
+            %% Compute residual
+            for i = 2:numCellsY + 1
+                for j = 2:numCellsX + 1
+        
+                    b_new(i, j) = dy * (u_new(i, j) - u_new(i, j + 1)) + dx * (v_new(i + 1, j) - v_new(i, j));
+        
+                end
+            end
+        
+            residual = sqrt(mean(b_new.^2, 'all')); % compute residual as RMS of the source term
+    
+            %% End of iteration
+            u = u_new;
+            v = v_new;
+            p = p_new;
+        
+        end
+    
+        %% End of time step
+        % Verify steady state
+        u_diff = sqrt(mean((u - u_old).^2, 'all'));
+        v_diff = sqrt(mean((v - v_old).^2, 'all'));
+        p_diff = sqrt(mean((p - p_old).^2, 'all'));
+        maxDiff = max(u_diff, v_diff);
+    
+        if maxDiff < steadyTolerance
+            fprintf('Steady-state reached at time %d (Tolerance = %.3e)\n', n * dt, maxDiff);
+            steadyReached = true;
+        end
+    
+        u_old = u;
+        v_old = v;
+        p_old = p;
+        totalIterations = totalIterations + iterations;
+    
+    end
+    
+    elapsedTime = toc;  % Stop timer and get elapsed seconds
+    fprintf('Total elapsed time: %.2f seconds\n', elapsedTime);
+
+end</code></pre>
+    </div>
+
+    <script>
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>
